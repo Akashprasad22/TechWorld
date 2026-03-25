@@ -132,10 +132,17 @@ const EditButton = styled.button`
   font-size: 1rem;
   font-weight: 600;
   transition: transform 0.2s, box-shadow 0.2s;
+  opacity: ${props => props.disabled ? 0.6 : 1};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
   
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  }
+  
+  &:disabled {
+    transform: none;
+    box-shadow: none;
   }
 `;
 
@@ -239,25 +246,39 @@ const Profile = () => {
   }, []);
 
   const handleImageChange = async (e) => {
+    console.log('handleImageChange triggered');
     const file = e.target.files[0];
+    console.log('Selected file:', file);
+    
     if (file) {
       // Check file type
       if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
         try {
           setLoading(true);
+          console.log('Starting image upload...');
+          
+          // Show immediate preview
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            console.log('Local preview generated');
+            setPreviewImage(event.target.result);
+          };
+          reader.readAsDataURL(file);
           
           // Create a unique filename
           const fileName = `profile_${Date.now()}_${file.name}`;
           const storageRef = ref(storage, `profile-pictures/${fileName}`);
           
+          console.log('Uploading to Firebase Storage...');
           // Upload to Firebase Storage
           await uploadBytes(storageRef, file);
           
+          console.log('Getting download URL...');
           // Get download URL
           const downloadURL = await getDownloadURL(storageRef);
           
+          console.log('Download URL received:', downloadURL);
           // Update user state with Firebase URL
-          setPreviewImage(downloadURL);
           setEditedUser({...editedUser, profilePicture: downloadURL});
           
           console.log('Profile picture uploaded successfully:', downloadURL);
@@ -274,7 +295,18 @@ const Profile = () => {
   };
 
   const triggerFileInput = () => {
-    document.getElementById('profile-picture-input').click();
+    console.log('triggerFileInput called, isEditing:', isEditing);
+    if (isEditing) {
+      const input = document.getElementById('profile-picture-input');
+      console.log('File input element:', input);
+      if (input) {
+        input.click();
+      } else {
+        console.error('File input element not found');
+      }
+    } else {
+      console.log('Not in edit mode, file upload disabled');
+    }
   };
 
   const handleEdit = () => {
@@ -284,24 +316,46 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    console.log('handleSave triggered');
+    console.log('Current editedUser:', editedUser);
+    console.log('Current previewImage:', previewImage);
+    
     try {
       setLoading(true);
       const currentUser = auth.currentUser;
-      if (currentUser) {
-        // Update Firestore with user data
-        const userRef = doc(db, 'users', currentUser.uid);
-        const updatedUser = {...editedUser, profilePicture: previewImage || editedUser.profilePicture};
-        
-        await updateDoc(userRef, updatedUser);
-        
-        // Update local state
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        
-        setIsEditing(false);
-        console.log('Profile updated successfully in Firebase');
-        alert('Profile updated successfully!');
+      console.log('Current user:', currentUser);
+      
+      if (!currentUser) {
+        console.error('No authenticated user found');
+        alert('Please login to update your profile');
+        return;
       }
+      
+      // Validate required fields
+      if (!editedUser.name || !editedUser.email) {
+        console.error('Required fields missing');
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      // Update Firestore with user data
+      const userRef = doc(db, 'users', currentUser.uid);
+      const updatedUser = {
+        ...editedUser,
+        profilePicture: previewImage || editedUser.profilePicture,
+        updatedAt: new Date().toISOString()
+      };
+      
+      console.log('Updating Firestore with:', updatedUser);
+      await updateDoc(userRef, updatedUser);
+      
+      // Update local state
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      setIsEditing(false);
+      console.log('Profile updated successfully in Firebase');
+      alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Failed to update profile. Please try again.');
@@ -370,8 +424,12 @@ const Profile = () => {
                   style={{ fontSize: '1rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%', minHeight: '60px', resize: 'vertical' }}
                 />
                 <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-                  <EditButton onClick={handleSave}>Save</EditButton>
-                  <EditButton onClick={handleCancel} style={{ background: '#6c757d' }}>Cancel</EditButton>
+                  <EditButton onClick={handleSave} disabled={loading}>
+                    {loading ? 'Saving...' : 'Save'}
+                  </EditButton>
+                  <EditButton onClick={handleCancel} style={{ background: '#6c757d' }} disabled={loading}>
+                    Cancel
+                  </EditButton>
                 </div>
               </>
             ) : (
