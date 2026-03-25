@@ -25,13 +25,11 @@ const AnimatedBackground = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, 
-      rgba(29, 78, 216, 0.1) 0%,
-      rgba(15, 23, 42, 0.05) 25%,
-      rgba(249, 115, 22, 0.08) 50%,
-      rgba(29, 78, 216, 0.1) 75%,
-      rgba(15, 23, 42, 0.05) 100%);
-    animation: gradientShift 15s ease infinite;
+    background: linear-gradient(135deg, 
+      rgba(29, 78, 216, 0.03) 0%,
+      rgba(15, 23, 42, 0.02) 50%,
+      rgba(29, 78, 216, 0.03) 100%);
+    animation: subtleGradientShift 20s ease-in-out infinite;
   }
   
   &::after {
@@ -42,20 +40,20 @@ const AnimatedBackground = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-    animation: pulse 8s ease-in-out infinite;
+      radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+      radial-gradient(circle at 15% 85%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+    animation: subtlePulse 12s ease-in-out infinite;
   }
 `;
 
 const FloatingElement = styled.div`
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: float ${props => props.duration || 8}s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  animation: subtleFloat ${props => props.duration || 15}s ease-in-out infinite;
+  opacity: 0.7;
 `;
 
 const HeroContent = styled.div`
@@ -111,57 +109,30 @@ const Hero = () => {
     <HeroSection>
       <AnimatedBackground>
         <FloatingElement 
-          duration={8}
-          style={{
-            width: '120px',
-            height: '120px',
-            top: '10%',
-            left: '10%',
-          }}
-        />
-        <FloatingElement 
-          duration={10}
+          duration={20}
           style={{
             width: '80px',
             height: '80px',
-            top: '20%',
-            right: '15%',
+            top: '15%',
+            left: '8%',
           }}
         />
         <FloatingElement 
-          duration={12}
-          style={{
-            width: '150px',
-            height: '150px',
-            bottom: '20%',
-            left: '20%',
-          }}
-        />
-        <FloatingElement 
-          duration={9}
+          duration={25}
           style={{
             width: '60px',
             height: '60px',
-            top: '50%',
-            right: '30%',
+            top: '25%',
+            right: '12%',
           }}
         />
         <FloatingElement 
-          duration={11}
+          duration={30}
           style={{
             width: '100px',
             height: '100px',
-            bottom: '10%',
-            right: '10%',
-          }}
-        />
-        <FloatingElement 
-          duration={7}
-          style={{
-            width: '90px',
-            height: '90px',
-            top: '70%',
-            left: '40%',
+            bottom: '20%',
+            left: '15%',
           }}
         />
       </AnimatedBackground>
