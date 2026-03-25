@@ -10,13 +10,22 @@ const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_AUTH_DOMAIN",
   projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
 
-const app = initializeApp(firebaseConfig);
-const storage = getStorage(app);
+// Initialize Firebase app only once
+let app;
+let storage;
+
+try {
+  app = initializeApp(firebaseConfig);
+  storage = getStorage(app);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+}
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -257,28 +266,46 @@ const Profile = () => {
     const file = e.target.files[0];
     console.log('Selected file:', file);
     
-    if (file) {
-      // Check file type
-      if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
-        try {
-          console.log('Valid image file selected');
-          
-          // Show immediate preview using FileReader
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            console.log('Local preview generated');
-            setPreviewImage(event.target.result);
-          };
-          reader.readAsDataURL(file);
-          
-          console.log('Image preview set, waiting for save to upload to Firebase');
-        } catch (error) {
-          console.error('Error creating image preview:', error);
-          alert('Failed to process image. Please try again.');
-        }
-      } else {
-        alert('Please select a valid image file (JPG, JPEG, or PNG)');
-      }
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      console.error('Invalid file type:', file.type);
+      alert('Please select a valid image file (JPG, JPEG, PNG, or WebP)');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      console.error('File too large:', file.size);
+      alert('Please select an image smaller than 5MB');
+      return;
+    }
+    
+    try {
+      console.log('Valid image file selected, creating preview...');
+      
+      // Show immediate preview using FileReader
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        console.log('Local preview generated successfully');
+        setPreviewImage(event.target.result);
+      };
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        alert('Failed to read the selected image');
+      };
+      reader.readAsDataURL(file);
+      
+      console.log('Image preview set, waiting for save to upload to Firebase');
+    } catch (error) {
+      console.error('Error creating image preview:', error);
+      alert('Failed to process image. Please try again.');
     }
   };
 
@@ -309,6 +336,12 @@ const Profile = () => {
     console.log('Current editedUser:', editedUser);
     console.log('Current previewImage:', previewImage);
     
+    if (!storage) {
+      console.error('Firebase Storage not initialized');
+      alert('Firebase Storage not properly configured');
+      return;
+    }
+    
     try {
       setLoading(true);
       console.log('Loading state set to true');
@@ -325,25 +358,47 @@ const Profile = () => {
       // Upload new image if there's a preview image that's different from current
       if (previewImage && previewImage !== editedUser.profilePicture) {
         console.log('Uploading new profile image...');
+        
         try {
-          // Extract file from preview if it's a blob/data URL
-          const response = await fetch(previewImage);
-          const blob = await response.blob();
+          // Get the actual file from the file input
+          const fileInput = document.getElementById('profile-picture-input');
+          const file = fileInput.files[0];
           
-          // Create a unique filename
-          const fileName = `profile_${user.uid}_${Date.now()}.jpg`;
+          if (!file) {
+            console.error('No file found in input');
+            throw new Error('No file selected');
+          }
+          
+          console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+          
+          // Create a unique filename with user UID
+          const fileName = `profile_${user.uid}_${Date.now()}_${file.name}`;
           const storageRef = ref(storage, `profile-pictures/${fileName}`);
           
-          console.log('Uploading to Firebase Storage...');
-          await uploadBytes(storageRef, blob);
+          console.log('Storage reference created:', storageRef.fullPath);
+          console.log('Starting Firebase Storage upload...');
+          
+          // Upload to Firebase Storage
+          const uploadResult = await uploadBytes(storageRef, file);
+          console.log('Upload completed:', uploadResult);
           
           console.log('Getting download URL...');
           finalProfilePicture = await getDownloadURL(storageRef);
-          console.log('New profile image URL:', finalProfilePicture);
-        } catch (error) {
-          console.error('Error uploading profile picture:', error);
-          alert('Failed to upload profile picture. Please try again.');
-          return;
+          console.log('Download URL received:', finalProfilePicture);
+          
+        } catch (uploadError) {
+          console.error('Firebase Storage upload error:', uploadError);
+          
+          // Provide specific error messages
+          if (uploadError.code === 'storage/unauthorized') {
+            throw new Error('Storage access denied. Please check Firebase Storage rules.');
+          } else if (uploadError.code === 'storage/canceled') {
+            throw new Error('Upload was cancelled');
+          } else if (uploadError.code === 'storage/unknown') {
+            throw new Error('Storage error: ' + uploadError.message);
+          } else {
+            throw new Error('Failed to upload image: ' + uploadError.message);
+          }
         }
       }
       
@@ -364,7 +419,7 @@ const Profile = () => {
       console.log('Profile save process completed successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
+      alert('Failed to update profile: ' + error.message);
     } finally {
       console.log('Setting loading to false');
       setLoading(false);
