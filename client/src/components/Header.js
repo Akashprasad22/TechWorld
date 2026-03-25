@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
 
 const HeaderContainer = styled.header`
-  background: #1a1a2e;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem 2rem;
   border-radius: 16px;
@@ -195,16 +195,18 @@ const NavList = styled.ul`
 `;
 
 const NavLink = styled(Link)`
-  color: white;
+  color: #000;
   text-decoration: none;
   padding: 1rem 1.5rem;
   display: block;
   transition: all 0.3s;
   border-bottom: 3px solid transparent;
+  font-weight: 600;
   
   &:hover, &.active {
     background: rgba(255,255,255,0.2);
     border-bottom-color: #ffd700;
+    color: #000;
   }
 `;
 
