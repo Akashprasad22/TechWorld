@@ -4,12 +4,16 @@ import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
 
 const HeaderContainer = styled.header`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: white;
+  color: #333;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  max-width: 1200px;
+  margin: 0 auto;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 `;
 
 const HeaderTop = styled.div`
@@ -174,8 +178,10 @@ const UserMenu = styled.div`
 `;
 
 const Navigation = styled.nav`
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 0.5rem 1rem;
 `;
 
 const NavList = styled.ul`
