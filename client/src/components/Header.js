@@ -121,9 +121,11 @@ const DropdownItem = styled.div`
   cursor: pointer;
   transition: background 0.2s;
   border-bottom: 1px solid #f0f0f;
+  color: #000;
   
   &:hover {
     background: #f8f9fa;
+    color: #000;
   }
   
   &:last-child {
