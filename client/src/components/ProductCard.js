@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
+import { generateProductImage } from '../services/aiImageGenerator';
 
 const ProductCardContainer = styled.div`
   background: white;
@@ -109,9 +110,64 @@ const AddToCartButton = styled.button`
   }
 `;
 
+const ImageGeneratingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
+const GeneratingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const GeneratingText = styled.div`
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.9rem;
+`;
+
+const AIImageBadge = styled.div`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: pulse 2s infinite;
+  
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+`;
+
 const ProductCard = ({ product }) => {
   const { addItem } = useCart();
   const [imageError, setImageError] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
 
   // Convert USD to INR (approximate conversion rate)
   const convertToINR = (usdPrice) => {
@@ -124,8 +180,36 @@ const ProductCard = ({ product }) => {
     return `₹${convertToINR(price).toLocaleString('en-IN')}`;
   };
 
-  // Fallback image URL
-  const fallbackImage = 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&ixid=MnwxOjR2VyWxEWQ1w7W&auto=format&fit=crop&w=800&q=80';
+  // Generate AI image when original image fails
+  const generateAIImage = async () => {
+    setIsGeneratingImage(true);
+    try {
+      const aiImageUrl = await generateProductImage(product.name, product.description);
+      setAiGeneratedImage(aiImageUrl);
+      setImageError(false);
+    } catch (error) {
+      console.error('AI image generation failed:', error);
+      setImageError(true);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  // Handle image error and trigger AI generation
+  const handleImageError = async () => {
+    if (!aiGeneratedImage && !isGeneratingImage) {
+      await generateAIImage();
+    } else {
+      setImageError(true);
+    }
+  };
+
+  // Get current image source
+  const getCurrentImageSrc = () => {
+    if (aiGeneratedImage) return aiGeneratedImage;
+    if (imageError) return 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    return product.image;
+  };
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -135,13 +219,9 @@ const ProductCard = ({ product }) => {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: getCurrentImageSrc(),
       quantity: 1
     });
-  };
-
-  const handleImageError = () => {
-    setImageError(true);
   };
 
   const renderStars = (rating) => {
@@ -158,10 +238,16 @@ const ProductCard = ({ product }) => {
   return (
     <ProductCardContainer>
       <ProductImage 
-        src={imageError ? fallbackImage : product.image} 
+        src={getCurrentImageSrc()} 
         alt={product.name}
         onError={handleImageError}
       />
+      {isGeneratingImage && (
+        <ImageGeneratingOverlay>
+          <GeneratingSpinner />
+          <GeneratingText>Generating AI Image...</GeneratingText>
+        </ImageGeneratingOverlay>
+      )}
       <ProductInfo>
         <ProductTitle>{product.name}</ProductTitle>
         <ProductCategory>{product.category}</ProductCategory>
@@ -171,6 +257,9 @@ const ProductCard = ({ product }) => {
           <ProductRating>
             {renderStars(product.rating)} ({product.reviews} reviews)
           </ProductRating>
+        )}
+        {aiGeneratedImage && (
+          <AIImageBadge>AI Generated</AIImageBadge>
         )}
         <ProductActions>
           <ViewDetailsButton to={`/product/${product.id}`}>

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
 import { getProductById } from '../data/products';
+import { generateProductImage } from '../services/aiImageGenerator';
 
 const ProductDetailsContainer = styled.div`
   max-width: 1200px;
@@ -138,6 +139,59 @@ const BackButton = styled(Link)`
   }
 `;
 
+const ImageGeneratingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
+const GeneratingSpinner = styled.div`
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const GeneratingText = styled.div`
+  color: #667eea;
+  font-weight: 600;
+  font-size: 1rem;
+`;
+
+const AIImageBadge = styled.div`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: pulse 2s infinite;
+  
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+`;
+
 const ErrorMessage = styled.div`
   text-align: center;
   padding: 2rem;
@@ -150,6 +204,8 @@ const ProductDetails = () => {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [imageError, setImageError] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
   
   const product = getProductById(id);
 
@@ -164,11 +220,35 @@ const ProductDetails = () => {
     return `₹${convertToINR(price).toLocaleString('en-IN')}`;
   };
 
-  // Fallback image URL
-  const fallbackImage = 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&ixid=MnwxOjR2VyWxEWQ1w7W&auto=format&fit=crop&w=800&q=80';
+  // Generate AI image when original image fails
+  const generateAIImage = async () => {
+    setIsGeneratingImage(true);
+    try {
+      const aiImageUrl = await generateProductImage(product.name, product.description);
+      setAiGeneratedImage(aiImageUrl);
+      setImageError(false);
+    } catch (error) {
+      console.error('AI image generation failed:', error);
+      setImageError(true);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
-  const handleImageError = () => {
-    setImageError(true);
+  // Handle image error and trigger AI generation
+  const handleImageError = async () => {
+    if (!aiGeneratedImage && !isGeneratingImage) {
+      await generateAIImage();
+    } else {
+      setImageError(true);
+    }
+  };
+
+  // Get current image source
+  const getCurrentImageSrc = () => {
+    if (aiGeneratedImage) return aiGeneratedImage;
+    if (imageError) return 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    return product.image;
   };
 
   if (!product) {
@@ -206,10 +286,16 @@ const ProductDetails = () => {
     <ProductDetailsContainer>
       <ProductImageContainer>
         <ProductImage 
-          src={imageError ? fallbackImage : product.image} 
+          src={getCurrentImageSrc()} 
           alt={product.name}
           onError={handleImageError}
         />
+        {isGeneratingImage && (
+          <ImageGeneratingOverlay>
+            <GeneratingSpinner />
+            <GeneratingText>Generating AI Image...</GeneratingText>
+          </ImageGeneratingOverlay>
+        )}
       </ProductImageContainer>
       
       <ProductInfoContainer>
@@ -221,6 +307,10 @@ const ProductDetails = () => {
           <ProductRating>
             {renderStars(product.rating)} ({product.reviews} reviews)
           </ProductRating>
+        )}
+        
+        {aiGeneratedImage && (
+          <AIImageBadge>AI Generated Image</AIImageBadge>
         )}
         
         <ProductDescription>{product.description}</ProductDescription>
