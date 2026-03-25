@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { initializeApp } from 'firebase/app';
+import { getApp, initializeApp } from 'firebase/app';
 import { useAuth } from '../context/AuthContext';
 
 // Initialize Firebase (replace with your config)
@@ -15,17 +15,37 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// Initialize Firebase app only once
+// Initialize Firebase app and get storage instance
 let app;
 let storage;
 
-try {
-  app = initializeApp(firebaseConfig);
-  storage = getStorage(app);
-  console.log('Firebase initialized successfully');
-} catch (error) {
-  console.error('Firebase initialization error:', error);
-}
+// Function to initialize Firebase Storage
+const initializeFirebaseStorage = () => {
+  try {
+    // Check if Firebase app is already initialized
+    try {
+      app = getApp();
+      console.log('Using existing Firebase app instance');
+    } catch (error) {
+      console.log('Initializing new Firebase app instance');
+      app = initializeApp(firebaseConfig);
+    }
+    
+    // Initialize Storage
+    storage = getStorage(app);
+    console.log('Firebase Storage initialized successfully');
+    console.log('Storage bucket:', firebaseConfig.storageBucket);
+    
+    return true;
+  } catch (error) {
+    console.error('Firebase Storage initialization error:', error);
+    console.error('Error details:', error.code, error.message);
+    return false;
+  }
+};
+
+// Initialize storage on module load
+const isStorageInitialized = initializeFirebaseStorage();
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -333,12 +353,22 @@ const Profile = () => {
 
   const handleSave = async () => {
     console.log('handleSave triggered');
+    console.log('Storage initialized:', isStorageInitialized);
     console.log('Current editedUser:', editedUser);
     console.log('Current previewImage:', previewImage);
     
-    if (!storage) {
-      console.error('Firebase Storage not initialized');
-      alert('Firebase Storage not properly configured');
+    // Check if user is authenticated
+    if (!user) {
+      console.error('No authenticated user found');
+      alert('Please login to update your profile');
+      return;
+    }
+    
+    // Check if Firebase Storage is properly initialized
+    if (!isStorageInitialized || !storage) {
+      console.error('Firebase Storage not properly initialized');
+      console.log('Firebase config:', firebaseConfig);
+      alert('Firebase Storage not properly configured. Please check your Firebase settings.');
       return;
     }
     
@@ -370,6 +400,7 @@ const Profile = () => {
           }
           
           console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+          console.log('User UID:', user.uid);
           
           // Create a unique filename with user UID
           const fileName = `profile_${user.uid}_${Date.now()}_${file.name}`;
@@ -380,7 +411,7 @@ const Profile = () => {
           
           // Upload to Firebase Storage
           const uploadResult = await uploadBytes(storageRef, file);
-          console.log('Upload completed:', uploadResult);
+          console.log('Upload completed successfully:', uploadResult);
           
           console.log('Getting download URL...');
           finalProfilePicture = await getDownloadURL(storageRef);
@@ -388,14 +419,18 @@ const Profile = () => {
           
         } catch (uploadError) {
           console.error('Firebase Storage upload error:', uploadError);
+          console.error('Error code:', uploadError.code);
+          console.error('Error message:', uploadError.message);
           
           // Provide specific error messages
           if (uploadError.code === 'storage/unauthorized') {
-            throw new Error('Storage access denied. Please check Firebase Storage rules.');
+            throw new Error('Storage access denied. Please check Firebase Storage rules in the Firebase console.');
           } else if (uploadError.code === 'storage/canceled') {
             throw new Error('Upload was cancelled');
           } else if (uploadError.code === 'storage/unknown') {
             throw new Error('Storage error: ' + uploadError.message);
+          } else if (uploadError.code === 'storage/retry-limit-exceeded') {
+            throw new Error('Upload retry limit exceeded. Please try again later.');
           } else {
             throw new Error('Failed to upload image: ' + uploadError.message);
           }
@@ -419,6 +454,7 @@ const Profile = () => {
       console.log('Profile save process completed successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
+      console.error('Error stack:', error.stack);
       alert('Failed to update profile: ' + error.message);
     } finally {
       console.log('Setting loading to false');
