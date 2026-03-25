@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
@@ -9,6 +9,8 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
+import PrivateRoute from './components/PrivateRoute';
 import Footer from './components/Footer';
 import GlobalStyles from './styles/GlobalStyles';
 import styled from 'styled-components';
@@ -30,24 +32,88 @@ function App() {
         <CartProvider>
           <AppContainer>
             <GlobalStyles />
-            <Header />
-            <MainContent>
-              <Routes>
-                <Route path="/" element={
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              
+              {/* Protected Routes */}
+              <Route path="/" element={
+                <PrivateRoute>
                   <>
-                    <Hero />
-                    <ProductsPage />
+                    <Header />
+                    <MainContent>
+                      <Hero />
+                      <ProductsPage />
+                    </MainContent>
+                    <Footer />
                   </>
-                } />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/product/:id" element={<ProductDetailPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/category/:category" element={<ProductsPage />} />
-              </Routes>
-            </MainContent>
-            <Footer />
+                </PrivateRoute>
+              } />
+              
+              <Route path="/products" element={
+                <PrivateRoute>
+                  <>
+                    <Header />
+                    <MainContent>
+                      <ProductsPage />
+                    </MainContent>
+                    <Footer />
+                  </>
+                </PrivateRoute>
+              } />
+              
+              <Route path="/product/:id" element={
+                <PrivateRoute>
+                  <>
+                    <Header />
+                    <MainContent>
+                      <ProductDetailPage />
+                    </MainContent>
+                    <Footer />
+                  </>
+                </PrivateRoute>
+              } />
+              
+              <Route path="/cart" element={
+                <PrivateRoute>
+                  <>
+                    <Header />
+                    <MainContent>
+                      <CartPage />
+                    </MainContent>
+                    <Footer />
+                  </>
+                </PrivateRoute>
+              } />
+              
+              <Route path="/profile" element={
+                <PrivateRoute>
+                  <>
+                    <Header />
+                    <MainContent>
+                      <Profile />
+                    </MainContent>
+                    <Footer />
+                  </>
+                </PrivateRoute>
+              } />
+              
+              <Route path="/category/:category" element={
+                <PrivateRoute>
+                  <>
+                    <Header />
+                    <MainContent>
+                      <ProductsPage />
+                    </MainContent>
+                    <Footer />
+                  </>
+                </PrivateRoute>
+              } />
+              
+              {/* Redirect any unknown routes to login */}
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
           </AppContainer>
         </CartProvider>
       </AuthProvider>

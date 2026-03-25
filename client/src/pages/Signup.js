@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useNavigate, Link } from 'react-router-dom';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
 
-const LoginContainer = styled.div`
+const SignupContainer = styled.div`
   max-width: 400px;
   margin: 2rem auto;
   padding: 2rem;
@@ -13,14 +13,14 @@ const LoginContainer = styled.div`
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 `;
 
-const LoginTitle = styled.h2`
+const SignupTitle = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
   color: #1a1a2e;
   font-size: 2rem;
 `;
 
-const LoginForm = styled.form`
+const SignupForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -76,20 +76,6 @@ const Button = styled.button`
   }
 `;
 
-const ToggleButton = styled.button`
-  background: transparent;
-  color: #667eea;
-  border: none;
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  text-decoration: underline;
-  
-  &:hover {
-    color: #764ba2;
-  }
-`;
-
 const ErrorMessage = styled.div`
   color: #dc3545;
   font-size: 0.9rem;
@@ -104,11 +90,29 @@ const SuccessMessage = styled.div`
   text-align: center;
 `;
 
-const Login = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+const LoginLink = styled.div`
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+  
+  a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    
+    &:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+  }
+`;
+
+const Signup = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -121,43 +125,45 @@ const Login = () => {
     setError('');
     setSuccess('');
 
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      setError('Password should be at least 6 characters long');
+      setLoading(false);
+      return;
+    }
+
     try {
       const auth = getAuth();
+      console.log('Creating user account with email:', email);
       
-      if (isSignUp) {
-        // Sign up
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        console.log('User signed up:', userCredential.user);
-        
-        // Create user profile
-        await updateUserProfile({
-          name: name,
-          email: email,
-          phone: '',
-          address: '',
-          profilePicture: null
-        });
-        
-        setSuccess('Account created successfully! Redirecting...');
-        setTimeout(() => navigate('/profile'), 2000);
-      } else {
-        // Sign in
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('User signed in:', userCredential.user);
-        setSuccess('Login successful! Redirecting to homepage...');
-        setTimeout(() => navigate('/'), 1500);
-      }
+      // Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('User created successfully:', userCredential.user);
+      
+      // Create user profile in Firestore
+      await updateUserProfile({
+        name: name,
+        email: email,
+        phone: '',
+        address: '',
+        profilePicture: null
+      });
+      
+      setSuccess('Account created successfully! Redirecting to homepage...');
+      setTimeout(() => navigate('/'), 2000);
+      
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error('Signup error:', error);
       let errorMessage = 'An error occurred. Please try again.';
       
       switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email.';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password.';
-          break;
         case 'auth/email-already-in-use':
           errorMessage = 'An account with this email already exists.';
           break;
@@ -167,8 +173,14 @@ const Login = () => {
         case 'auth/invalid-email':
           errorMessage = 'Please enter a valid email address.';
           break;
+        case 'auth/api-key-not-valid':
+          errorMessage = 'Firebase configuration error. Please check your API key.';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled.';
+          break;
         default:
-          errorMessage = error.message;
+          errorMessage = error.message || 'Failed to create account. Please try again.';
       }
       
       setError(errorMessage);
@@ -178,22 +190,20 @@ const Login = () => {
   };
 
   return (
-    <LoginContainer>
-      <LoginTitle>{isSignUp ? 'Create Account' : 'Login'}</LoginTitle>
+    <SignupContainer>
+      <SignupTitle>Create Account</SignupTitle>
       
-      <LoginForm onSubmit={handleSubmit}>
-        {isSignUp && (
-          <InputGroup>
-            <Label>Full Name</Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your full name"
-              required
-            />
-          </InputGroup>
-        )}
+      <SignupForm onSubmit={handleSubmit}>
+        <InputGroup>
+          <Label>Full Name</Label>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your full name"
+            required
+          />
+        </InputGroup>
         
         <InputGroup>
           <Label>Email Address</Label>
@@ -218,26 +228,31 @@ const Login = () => {
           />
         </InputGroup>
         
+        <InputGroup>
+          <Label>Confirm Password</Label>
+          <Input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm your password"
+            required
+            minLength={6}
+          />
+        </InputGroup>
+        
         <Button type="submit" disabled={loading}>
-          {loading ? (isSignUp ? 'Creating Account...' : 'Logging in...') : (isSignUp ? 'Create Account' : 'Login')}
+          {loading ? 'Creating Account...' : 'Create Account'}
         </Button>
         
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {success && <SuccessMessage>{success}</SuccessMessage>}
         
-        <ToggleButton
-          type="button"
-          onClick={() => {
-            setIsSignUp(!isSignUp);
-            setError('');
-            setSuccess('');
-          }}
-        >
-          {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign up"}
-        </ToggleButton>
-      </LoginForm>
-    </LoginContainer>
+        <LoginLink>
+          Already have an account? <Link to="/login">Login here</Link>
+        </LoginLink>
+      </SignupForm>
+    </SignupContainer>
   );
 };
 
-export default Login;
+export default Signup;
