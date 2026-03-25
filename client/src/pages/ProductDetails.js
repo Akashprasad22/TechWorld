@@ -174,8 +174,8 @@ const GeneratingText = styled.div`
   font-size: 1rem;
 `;
 
-const AIImageBadge = styled.div`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+const ImageReplacedBadge = styled.div`
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 25px;
@@ -183,12 +183,11 @@ const AIImageBadge = styled.div`
   font-weight: 600;
   margin-bottom: 1rem;
   display: inline-block;
-  animation: pulse 2s infinite;
+  animation: fadeIn 0.5s ease-in;
   
-  @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 `;
 
@@ -224,11 +223,11 @@ const ProductDetails = () => {
   const generateAIImage = async () => {
     setIsGeneratingImage(true);
     try {
-      const aiImageUrl = await generateProductImage(product.name, product.description);
+      const aiImageUrl = await generateProductImage(product.name, product.description, product.category);
       setAiGeneratedImage(aiImageUrl);
       setImageError(false);
     } catch (error) {
-      console.error('AI image generation failed:', error);
+      console.error('Image generation failed:', error);
       setImageError(true);
     } finally {
       setIsGeneratingImage(false);
@@ -310,7 +309,7 @@ const ProductDetails = () => {
         )}
         
         {aiGeneratedImage && (
-          <AIImageBadge>AI Generated Image</AIImageBadge>
+          <ImageReplacedBadge>Image Replaced</ImageReplacedBadge>
         )}
         
         <ProductDescription>{product.description}</ProductDescription>

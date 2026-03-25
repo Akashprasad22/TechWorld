@@ -1,81 +1,115 @@
 // AI Image Generation Service
-// Generates product images using product name and description
+// Generates relevant product images based on product name and category
 
 class AIImageGenerator {
   constructor() {
     this.apiKey = null; // You can add your API key here
-    this.fallbackPrompt = 'professional product photography, clean white background, high quality, e-commerce';
   }
 
-  // Generate image using product name and description
-  async generateProductImage(productName, productDescription) {
+  // Generate image using product name, description, and category
+  async generateProductImage(productName, productDescription, productCategory) {
     try {
-      // Create a descriptive prompt for AI image generation
-      const prompt = this.createImagePrompt(productName, productDescription);
-      
-      // For now, we'll use a placeholder service that generates consistent images
-      // In a real implementation, you would use services like:
-      // - OpenAI DALL-E API
-      // - Stability AI API
-      // - Midjourney API
-      // - Replicate API
-      
-      const imageUrl = await this.generateFromPrompt(prompt);
-      return imageUrl;
+      // Get relevant image based on product name and category
+      const relevantImage = this.getRelevantProductImage(productName, productCategory);
+      return relevantImage;
     } catch (error) {
-      console.error('AI image generation failed:', error);
+      console.error('Image generation failed:', error);
       return this.getFallbackImage(productName);
     }
   }
 
-  // Create a descriptive prompt for image generation
-  createImagePrompt(productName, productDescription) {
-    const basePrompt = `${productName}, ${productDescription}`;
-    const stylePrompt = 'professional product photography, clean white background, studio lighting, high resolution, e-commerce style';
-    const qualityPrompt = 'ultra realistic, detailed, commercial photography';
+  // Get relevant high-quality image based on product name and category
+  getRelevantProductImage(productName, productCategory) {
+    const name = productName.toLowerCase();
+    const category = productCategory.toLowerCase();
     
-    return `${basePrompt}, ${stylePrompt}, ${qualityPrompt}`;
-  }
-
-  // Generate image from prompt (using placeholder service for demo)
-  async generateFromPrompt(prompt) {
-    // For demonstration, we'll use a service that generates consistent images
-    // In production, replace this with actual AI API calls
-    
-    // Using a hash of the prompt to get consistent images
-    const promptHash = this.hashCode(prompt);
-    const seed = Math.abs(promptHash) % 1000;
-    
-    // Using a placeholder image service with seed for consistency
-    return `https://picsum.photos/seed/${seed}/400/300.jpg`;
-  }
-
-  // Simple hash function for consistent image generation
-  hashCode(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
+    // Electronics - High-quality tech images
+    if (category === 'electronics') {
+      if (name.includes('headphone') || name.includes('earphone')) {
+        return 'https://images.unsplash.com/photo-1505740420958-88e529a7b6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('watch') || name.includes('smartwatch')) {
+        return 'https://images.unsplash.com/photo-1523275335883-b626f84dcf7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('camera') || name.includes('dslr')) {
+        return 'https://images.unsplash.com/photo-1542030185086-824a1aa3c5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('laptop') || name.includes('notebook')) {
+        return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('phone') || name.includes('smartphone')) {
+        return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('keyboard')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('mouse')) {
+        return 'https://images.unsplash.com/photo-1615463149636-5ae231b8044?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('webcam')) {
+        return 'https://images.unsplash.com/photo-1596728348854-9e5171b5b0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('hub') || name.includes('adapter')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('charger')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('monitor') || name.includes('light bar')) {
+        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
     }
-    return hash;
+    
+    // Furniture - Office and home furniture
+    if (category === 'furniture') {
+      if (name.includes('chair') || name.includes('seat')) {
+        return 'https://images.unsplash.com/photo-1586023498325-558dc9a1c77?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('desk') || name.includes('table')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('converter') || name.includes('standing')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+    }
+    
+    // Office Supplies - Professional workspace items
+    if (category === 'office supplies') {
+      if (name.includes('organizer') || name.includes('pen')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('box') || name.includes('management')) {
+        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('lamp') || name.includes('light')) {
+        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+    }
+    
+    // Lighting - Professional lighting products
+    if (category === 'lighting') {
+      if (name.includes('lamp') || name.includes('light')) {
+        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('monitor') || name.includes('tv')) {
+        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('rgb') || name.includes('led')) {
+        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+    }
+    
+    // Default fallback for any product
+    return 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
   }
 
-  // Get fallback image based on product category
+  // Get fallback image based on product category (backup method)
   getFallbackImage(productName) {
     const category = this.detectCategory(productName);
     const categoryImages = {
       'electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7cd166b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'headphones': 'https://images.unsplash.com/photo-1505740420958-88e529a7b6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'watch': 'https://images.unsplash.com/photo-1523275335883-b626f84dcf7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'camera': 'https://images.unsplash.com/photo-1542030185086-824a1aa3c5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       'furniture': 'https://images.unsplash.com/photo-1586023498325-558dc9a1c77?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'desk': 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'chair': 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'laptop': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'phone': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'keyboard': 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'mouse': 'https://images.unsplash.com/photo-1615463149636-5ae231b8044?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      'office supplies': 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       'lighting': 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       'default': 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     };
@@ -87,17 +121,24 @@ class AIImageGenerator {
   detectCategory(productName) {
     const name = productName.toLowerCase();
     
-    if (name.includes('headphone') || name.includes('earphone')) return 'headphones';
-    if (name.includes('watch') || name.includes('smartwatch')) return 'watch';
-    if (name.includes('camera') || name.includes('dslr')) return 'camera';
-    if (name.includes('laptop') || name.includes('notebook')) return 'laptop';
-    if (name.includes('phone') || name.includes('smartphone')) return 'phone';
-    if (name.includes('keyboard')) return 'keyboard';
-    if (name.includes('mouse')) return 'mouse';
-    if (name.includes('chair') || name.includes('seat')) return 'chair';
-    if (name.includes('desk') || name.includes('table')) return 'desk';
+    if (name.includes('headphone') || name.includes('earphone')) return 'electronics';
+    if (name.includes('watch') || name.includes('smartwatch')) return 'electronics';
+    if (name.includes('camera') || name.includes('dslr')) return 'electronics';
+    if (name.includes('laptop') || name.includes('notebook')) return 'electronics';
+    if (name.includes('phone') || name.includes('smartphone')) return 'electronics';
+    if (name.includes('keyboard')) return 'electronics';
+    if (name.includes('mouse')) return 'electronics';
+    if (name.includes('webcam')) return 'electronics';
+    if (name.includes('hub') || name.includes('adapter')) return 'electronics';
+    if (name.includes('charger')) return 'electronics';
+    if (name.includes('monitor') || name.includes('light bar')) return 'lighting';
     if (name.includes('lamp') || name.includes('light')) return 'lighting';
-    if (name.includes('furniture') || name.includes('sofa') || name.includes('table')) return 'furniture';
+    if (name.includes('chair') || name.includes('seat')) return 'furniture';
+    if (name.includes('desk') || name.includes('table')) return 'furniture';
+    if (name.includes('converter') || name.includes('standing')) return 'furniture';
+    if (name.includes('organizer') || name.includes('pen')) return 'office supplies';
+    if (name.includes('box') || name.includes('management')) return 'office supplies';
+    if (name.includes('furniture') || name.includes('sofa')) return 'furniture';
     
     return 'electronics'; // Default category
   }
@@ -162,11 +203,11 @@ class AIImageGenerator {
 export const aiImageGenerator = new AIImageGenerator();
 
 // Helper function for React components
-export const generateProductImage = async (productName, productDescription) => {
+export const generateProductImage = async (productName, productDescription, productCategory) => {
   try {
-    return await aiImageGenerator.generateProductImage(productName, productDescription);
+    return await aiImageGenerator.generateProductImage(productName, productDescription, productCategory);
   } catch (error) {
-    console.error('Failed to generate AI image:', error);
+    console.error('Failed to generate product image:', error);
     return aiImageGenerator.getFallbackImage(productName);
   }
 };
