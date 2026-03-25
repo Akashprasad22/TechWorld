@@ -37,12 +37,38 @@ const ProfilePicture = styled.div`
   color: white;
   font-weight: bold;
   overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  &::after {
+    content: '📷';
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 1.2rem;
+    background: rgba(0,0,0,0.7);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+  }
+  
+  i {
+    font-size: 3rem;
   }
 `;
 
@@ -157,10 +183,12 @@ const Profile = () => {
     name: 'John Doe',
     email: 'john.doe@example.com',
     phone: '+91 98765 43210',
-    address: '123 Tech Street, Bangalore, Karnataka 560001, India'
+    address: '123 Tech Street, Bangalore, Karnataka 560001, India',
+    profilePicture: null
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
+  const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
     // Fetch user data from localStorage or API
@@ -170,19 +198,43 @@ const Profile = () => {
     }
   }, []);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file type
+      if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPreviewImage(event.target.result);
+          setEditedUser({...editedUser, profilePicture: event.target.result});
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please select a valid image file (JPG, JPEG, or PNG)');
+      }
+    }
+  };
+
+  const triggerFileInput = () => {
+    document.getElementById('profile-picture-input').click();
+  };
+
   const handleEdit = () => {
     setIsEditing(true);
     setEditedUser(user);
+    setPreviewImage(user.profilePicture);
   };
 
   const handleSave = () => {
-    setUser(editedUser);
-    localStorage.setItem('user', JSON.stringify(editedUser));
+    const updatedUser = {...editedUser, profilePicture: previewImage || editedUser.profilePicture};
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setEditedUser(user);
+    setPreviewImage(null);
     setIsEditing(false);
   };
 
@@ -196,9 +248,20 @@ const Profile = () => {
     <ProfileContainer>
       <ProfileCard>
         <ProfileHeader>
-          <ProfilePicture>
-            <img src="/api/placeholder/120/120" alt="Profile" />
+          <ProfilePicture onClick={triggerFileInput}>
+            {previewImage || user.profilePicture ? (
+              <img src={previewImage || user.profilePicture} alt="Profile" />
+            ) : (
+              <i className="fas fa-user"></i>
+            )}
           </ProfilePicture>
+          <input
+            id="profile-picture-input"
+            type="file"
+            accept="image/jpeg,image/jpg,image/png"
+            onChange={handleImageChange}
+            style={{ display: 'none' }}
+          />
           <ProfileInfo>
             {isEditing ? (
               <>
