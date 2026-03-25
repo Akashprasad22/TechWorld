@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
 
 const HeaderContainer = styled.header`
-  background: white;
-  color: #333;
+  background: #1a1a2e;
+  color: white;
   padding: 1rem 2rem;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -14,6 +14,7 @@ const HeaderContainer = styled.header`
   position: sticky;
   top: 0;
   z-index: 1000;
+  border: 1px solid rgba(255,255,255,0.1);
 `;
 
 const HeaderTop = styled.div`
@@ -39,7 +40,7 @@ const Logo = styled(Link)`
   }
   
   i {
-    color: #ffd700;
+    color: #f8fafc;
   }
 `;
 
