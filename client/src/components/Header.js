@@ -105,34 +105,37 @@ const CartCount = styled.span`
 
 const ProfileDropdown = styled.div`
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 16px);
   right: 0;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  min-width: 200px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  min-width: 280px;
   z-index: 1002;
   overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.06);
   opacity: ${props => props.isOpen ? 1 : 0};
   transform: ${props => props.isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)'};
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 16px;
   
   &::before {
     content: '';
     position: absolute;
-    top: -8px;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 8px solid white;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #667eea 100%);
+    height: 4px;
+    border-radius: 12px 12px 0 0;
   }
 `;
 
 const DropdownItem = styled.div`
-  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   border-bottom: 1px solid #f0f0f;
@@ -143,13 +146,20 @@ const DropdownItem = styled.div`
     background: #f8f9fa;
     color: #000;
     border-radius: 6px;
-    transform: translateX(2px);
   }
   
   &:last-child {
     border-bottom: none;
     border-radius: 0 0 6px 6px;
   }
+`;
+
+const DropdownIcon = styled.i`
+  color: #666;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  margin-right: 12px;
 `;
 
 const UserMenu = styled.div`
@@ -262,13 +272,16 @@ const Header = () => {
               {isProfileOpen && (
                 <ProfileDropdown className="profile-dropdown" isOpen={isProfileOpen} ref={dropdownRef}>
                   <DropdownItem onClick={() => { navigate('/profile'); closeProfileDropdown(); }}>
-                    <i className="fas fa-user"></i> Profile
+                    <DropdownIcon className="fas fa-user"></DropdownIcon>
+                    <span>Profile</span>
                   </DropdownItem>
                   <DropdownItem onClick={() => { navigate('/orders'); closeProfileDropdown(); }}>
-                    <i className="fas fa-shopping-bag"></i> Orders
+                    <DropdownIcon className="fas fa-shopping-bag"></DropdownIcon>
+                    <span>Orders</span>
                   </DropdownItem>
                   <DropdownItem onClick={() => { navigate('/settings'); closeProfileDropdown(); }}>
-                    <i className="fas fa-cog"></i> Settings
+                    <DropdownIcon className="fas fa-cog"></DropdownIcon>
+                    <span>Settings</span>
                   </DropdownItem>
                   <DropdownItem onClick={() => { 
                     // Handle logout
@@ -276,7 +289,8 @@ const Header = () => {
                     navigate('/login'); 
                     closeProfileDropdown(); 
                   }}>
-                    <i className="fas fa-sign-out-alt"></i> Logout
+                    <DropdownIcon className="fas fa-sign-out-alt"></DropdownIcon>
+                    <span>Logout</span>
                   </DropdownItem>
                 </ProfileDropdown>
               )}
