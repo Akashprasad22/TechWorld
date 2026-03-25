@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -235,12 +235,28 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, userData, updateUserProfile, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(userData || {});
+  const [editedUser, setEditedUser] = useState({});
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   console.log('Profile component - user:', user);
   console.log('Profile component - userData:', userData);
+
+  // Update editedUser when userData changes
+  useEffect(() => {
+    console.log('userData changed, updating editedUser:', userData);
+    if (userData) {
+      setEditedUser(userData);
+    }
+  }, [userData]);
+
+  // Reset editedUser when exiting edit mode
+  useEffect(() => {
+    if (!isEditing && userData) {
+      setEditedUser(userData);
+      setPreviewImage(userData.profilePicture || null);
+    }
+  }, [isEditing, userData]);
 
   const inputStyles = {
     fontSize: '1rem',
@@ -346,9 +362,16 @@ const Profile = () => {
 
   const handleEdit = () => {
     console.log('Entering edit mode');
+    console.log('Current userData for editing:', userData);
+    
+    if (!userData) {
+      console.error('No userData available for editing');
+      return;
+    }
+    
     setIsEditing(true);
-    setEditedUser(userData || {});
-    setPreviewImage(userData?.profilePicture || null);
+    setEditedUser({...userData});
+    setPreviewImage(userData.profilePicture || null);
   };
 
   const handleSave = async () => {
@@ -464,8 +487,16 @@ const Profile = () => {
 
   const handleCancel = () => {
     console.log('Canceling edit mode');
-    setEditedUser(userData || {});
-    setPreviewImage(userData?.profilePicture || null);
+    console.log('Resetting to userData:', userData);
+    
+    if (userData) {
+      setEditedUser({...userData});
+      setPreviewImage(userData.profilePicture || null);
+    } else {
+      setEditedUser({});
+      setPreviewImage(null);
+    }
+    
     setIsEditing(false);
   };
 
