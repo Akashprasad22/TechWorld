@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const HeaderContainer = styled.header`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -232,6 +233,7 @@ const Header = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { getTotalItems, toggleCart } = useCart();
+  const { user, userData, logout } = useAuth();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -243,7 +245,11 @@ const Header = () => {
   const toggleProfileDropdown = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsProfileOpen(!isProfileOpen);
+    if (!user) {
+      navigate('/login');
+    } else {
+      setIsProfileOpen(!isProfileOpen);
+    }
   };
 
   const closeProfileDropdown = () => {
@@ -308,12 +314,13 @@ const Header = () => {
                     <DropdownIcon className="fas fa-cog"></DropdownIcon>
                     <span>Settings</span>
                   </DropdownItem>
-                  <DropdownItem onClick={() => { 
-                    // Handle logout
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    navigate('/login'); 
-                    closeProfileDropdown(); 
+                  <DropdownItem onClick={async () => { 
+                    try {
+                      await logout();
+                      closeProfileDropdown(); 
+                    } catch (error) {
+                      console.error('Logout error:', error);
+                    }
                   }}>
                     <DropdownIcon className="fas fa-sign-out-alt"></DropdownIcon>
                     <span>Logout</span>

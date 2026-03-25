@@ -8,6 +8,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import Profile from './pages/Profile';
+import Login from './pages/Login';
 import Footer from './components/Footer';
 import GlobalStyles from './styles/GlobalStyles';
 import styled from 'styled-components';
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/category/:category" element={<ProductsPage />} />
               </Routes>
             </MainContent>

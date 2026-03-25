@@ -70,6 +70,15 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
+          // Set minimal user data even if Firestore fails
+          setUserData({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || 'User',
+            phone: '',
+            address: '',
+            profilePicture: firebaseUser.photoURL || null
+          });
         }
       } else {
         console.log('No authenticated user');
