@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
 
 // Initialize Firebase (replace with your config)
 const firebaseConfig = {
@@ -18,8 +17,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
-const db = getFirestore(app);
-const auth = getAuth(app);
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -207,71 +204,14 @@ const LogoutButton = styled.button`
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 98765 43210',
-    address: '123 Tech Street, Bangalore, Karnataka 560001, India',
-    profilePicture: null
-  });
+  const { user, userData, updateUserProfile, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(user);
+  const [editedUser, setEditedUser] = useState(userData || {});
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [authUser, setAuthUser] = useState(null);
 
-  useEffect(() => {
-    // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user);
-      setAuthUser(user);
-      
-      if (user) {
-        console.log('User is authenticated, fetching user data...');
-        fetchUserData(user);
-      } else {
-        console.log('No authenticated user, redirecting to login...');
-        navigate('/login');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const fetchUserData = async (currentUser) => {
-    try {
-      console.log('Fetching user data for UID:', currentUser.uid);
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log('User data found:', userData);
-        setUser(userData);
-        setEditedUser(userData);
-      } else {
-        console.log('No user data found, using default with auth info');
-        // Create user data from auth info
-        const defaultUserData = {
-          name: currentUser.displayName || 'User',
-          email: currentUser.email,
-          phone: '',
-          address: '',
-          profilePicture: currentUser.photoURL || null,
-          uid: currentUser.uid
-        };
-        setUser(defaultUserData);
-        setEditedUser(defaultUserData);
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      // Fallback to localStorage
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        setEditedUser(JSON.parse(storedUser));
-      }
-    }
-  };
+  console.log('Profile component - user:', user);
+  console.log('Profile component - userData:', userData);
 
   const handleImageChange = async (e) => {
     console.log('handleImageChange triggered');
@@ -319,30 +259,20 @@ const Profile = () => {
   };
 
   const handleEdit = () => {
+    console.log('Entering edit mode');
     setIsEditing(true);
-    setEditedUser(user);
-    setPreviewImage(user.profilePicture);
+    setEditedUser(userData || {});
+    setPreviewImage(userData?.profilePicture || null);
   };
 
   const handleSave = async () => {
     console.log('handleSave triggered');
-    console.log('Current authUser:', authUser);
     console.log('Current editedUser:', editedUser);
     console.log('Current previewImage:', previewImage);
     
     try {
       setLoading(true);
       console.log('Loading state set to true');
-      
-      // Use authUser state instead of auth.currentUser
-      const currentUser = authUser;
-      console.log('Current user from authUser state:', currentUser);
-      
-      if (!currentUser) {
-        console.error('No authenticated user found in authUser state');
-        alert('Please login to update your profile');
-        return;
-      }
       
       // Validate required fields
       if (!editedUser.name || !editedUser.email) {
@@ -362,7 +292,7 @@ const Profile = () => {
           const blob = await response.blob();
           
           // Create a unique filename
-          const fileName = `profile_${Date.now()}.jpg`;
+          const fileName = `profile_${user.uid}_${Date.now()}.jpg`;
           const storageRef = ref(storage, `profile-pictures/${fileName}`);
           
           console.log('Uploading to Firebase Storage...');
@@ -378,24 +308,15 @@ const Profile = () => {
         }
       }
       
-      // Update Firestore with user data
-      console.log('Updating Firestore...');
-      const userRef = doc(db, 'users', currentUser.uid);
+      // Update user profile using AuthContext
+      console.log('Updating user profile via AuthContext...');
       const updatedUser = {
         ...editedUser,
-        profilePicture: finalProfilePicture,
-        updatedAt: new Date().toISOString(),
-        uid: currentUser.uid
+        profilePicture: finalProfilePicture
       };
       
-      console.log('Updating Firestore with:', updatedUser);
-      await updateDoc(userRef, updatedUser);
-      console.log('Firestore update completed');
-      
-      // Update local state
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      console.log('Local state updated');
+      await updateUserProfile(updatedUser);
+      console.log('Profile updated successfully via AuthContext');
       
       setIsEditing(false);
       console.log('Edit mode disabled');
@@ -412,18 +333,21 @@ const Profile = () => {
   };
 
   const handleCancel = () => {
-    setEditedUser(user);
-    setPreviewImage(null);
+    console.log('Canceling edit mode');
+    setEditedUser(userData || {});
+    setPreviewImage(userData?.profilePicture || null);
     setIsEditing(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log('Logging out user...');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setAuthUser(null);
-    auth.signOut();
-    navigate('/login');
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      alert('Failed to logout. Please try again.');
+    }
   };
 
   return (
@@ -431,8 +355,8 @@ const Profile = () => {
       <ProfileCard>
         <ProfileHeader>
           <ProfilePicture isEditing={isEditing} onClick={isEditing ? triggerFileInput : undefined}>
-            {previewImage || user.profilePicture ? (
-              <img src={previewImage || user.profilePicture} alt="Profile" />
+            {previewImage || userData?.profilePicture ? (
+              <img src={previewImage || userData?.profilePicture} alt="Profile" />
             ) : (
               <i className="fas fa-user"></i>
             )}
@@ -451,24 +375,24 @@ const Profile = () => {
               <>
                 <input
                   type="text"
-                  value={editedUser.name}
+                  value={editedUser.name || ''}
                   onChange={(e) => setEditedUser({...editedUser, name: e.target.value})}
                   style={{ fontSize: '1.8rem', marginBottom: '0.5rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px' }}
                 />
                 <input
                   type="email"
-                  value={editedUser.email}
+                  value={editedUser.email || ''}
                   onChange={(e) => setEditedUser({...editedUser, email: e.target.value})}
                   style={{ fontSize: '1rem', marginBottom: '0.25rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%' }}
                 />
                 <input
                   type="tel"
-                  value={editedUser.phone}
+                  value={editedUser.phone || ''}
                   onChange={(e) => setEditedUser({...editedUser, phone: e.target.value})}
                   style={{ fontSize: '1rem', marginBottom: '0.25rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%' }}
                 />
                 <textarea
-                  value={editedUser.address}
+                  value={editedUser.address || ''}
                   onChange={(e) => setEditedUser({...editedUser, address: e.target.value})}
                   style={{ fontSize: '1rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%', minHeight: '60px', resize: 'vertical' }}
                 />
@@ -483,10 +407,10 @@ const Profile = () => {
               </>
             ) : (
               <>
-                <ProfileName>{user.name}</ProfileName>
-                <ProfileEmail>📧 {user.email}</ProfileEmail>
-                <ProfilePhone>📱 {user.phone}</ProfilePhone>
-                <ProfileAddress>📍 {user.address}</ProfileAddress>
+                <ProfileName>{userData?.name || 'User'}</ProfileName>
+                <ProfileEmail>📧 {userData?.email || 'No email'}</ProfileEmail>
+                <ProfilePhone>📱 {userData?.phone || 'No phone'}</ProfilePhone>
+                <ProfileAddress>📍 {userData?.address || 'No address'}</ProfileAddress>
                 <EditButton onClick={handleEdit}>Edit Profile</EditButton>
               </>
             )}
