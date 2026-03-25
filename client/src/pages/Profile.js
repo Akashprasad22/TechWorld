@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Initialize Firebase (replace with your config)
 const firebaseConfig = {
@@ -16,6 +18,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -52,28 +56,30 @@ const ProfilePicture = styled.div`
   color: white;
   font-weight: bold;
   overflow: hidden;
-  cursor: pointer;
   position: relative;
   transition: transform 0.2s;
+  cursor: ${props => props.isEditing ? 'pointer' : 'default'};
   
-  &:hover {
-    transform: scale(1.05);
-  }
-  
-  &::after {
-    content: '📷';
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    font-size: 1.2rem;
-    background: rgba(0,0,0,0.7);
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  ${props => props.isEditing && `
+    &:hover {
+      transform: scale(1.05);
+    }
+    
+    &::after {
+      content: '📷';
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      font-size: 1.2rem;
+      background: rgba(0,0,0,0.7);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  `}
   
   img {
     width: 100%;
@@ -204,13 +210,32 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
   const [previewImage, setPreviewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch user data from localStorage or API
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Fetch user data from Firebase Firestore
+    const fetchUserData = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser(userData);
+            setEditedUser(userData);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to localStorage
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+            setEditedUser(JSON.parse(storedUser));
+          }
+        }
+      }
+    };
+    fetchUserData();
   }, []);
 
   const handleImageChange = async (e) => {
@@ -219,8 +244,7 @@ const Profile = () => {
       // Check file type
       if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
         try {
-          // Show loading state
-          setIsEditing(true);
+          setLoading(true);
           
           // Create a unique filename
           const fileName = `profile_${Date.now()}_${file.name}`;
@@ -240,6 +264,8 @@ const Profile = () => {
         } catch (error) {
           console.error('Error uploading profile picture:', error);
           alert('Failed to upload profile picture. Please try again.');
+        } finally {
+          setLoading(false);
         }
       } else {
         alert('Please select a valid image file (JPG, JPEG, or PNG)');
@@ -257,12 +283,31 @@ const Profile = () => {
     setPreviewImage(user.profilePicture);
   };
 
-  const handleSave = () => {
-    const updatedUser = {...editedUser, profilePicture: previewImage || editedUser.profilePicture};
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setIsEditing(false);
-    console.log('Profile updated with Firebase URL:', updatedUser.profilePicture);
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        // Update Firestore with user data
+        const userRef = doc(db, 'users', currentUser.uid);
+        const updatedUser = {...editedUser, profilePicture: previewImage || editedUser.profilePicture};
+        
+        await updateDoc(userRef, updatedUser);
+        
+        // Update local state
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        setIsEditing(false);
+        console.log('Profile updated successfully in Firebase');
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -274,6 +319,7 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    auth.signOut();
     navigate('/login');
   };
 
@@ -281,20 +327,22 @@ const Profile = () => {
     <ProfileContainer>
       <ProfileCard>
         <ProfileHeader>
-          <ProfilePicture onClick={triggerFileInput}>
+          <ProfilePicture isEditing={isEditing} onClick={isEditing ? triggerFileInput : undefined}>
             {previewImage || user.profilePicture ? (
               <img src={previewImage || user.profilePicture} alt="Profile" />
             ) : (
               <i className="fas fa-user"></i>
             )}
           </ProfilePicture>
-          <input
-            id="profile-picture-input"
-            type="file"
-            accept="image/jpeg,image/jpg,image/png"
-            onChange={handleImageChange}
-            style={{ display: 'none' }}
-          />
+          {isEditing && (
+            <input
+              id="profile-picture-input"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              onChange={handleImageChange}
+              style={{ display: 'none' }}
+            />
+          )}
           <ProfileInfo>
             {isEditing ? (
               <>
