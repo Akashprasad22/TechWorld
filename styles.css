@@ -135,6 +135,8 @@ body {
 .main-nav {
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(12px);
+    border-radius: 0 0 28px 28px;
+    overflow: hidden;
 }
 
 .nav-list {
@@ -157,6 +159,92 @@ body {
 .nav-link.active {
     background: rgba(255, 255, 255, 0.16);
     border-bottom-color: #fbbf24;
+}
+
+.nav-product-marquee {
+    position: relative;
+    padding: 0.9rem 0 1.1rem;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background:
+        radial-gradient(circle at top left, rgba(251, 191, 36, 0.16), transparent 38%),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.22), transparent 42%),
+        rgba(255, 255, 255, 0.03);
+}
+
+.nav-product-marquee::before,
+.nav-product-marquee::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 96px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.nav-product-marquee::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.8), transparent);
+}
+
+.nav-product-marquee::after {
+    right: 0;
+    background: linear-gradient(270deg, rgba(15, 23, 42, 0.8), transparent);
+}
+
+.marquee-track {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: max-content;
+    padding-inline: 1rem;
+    animation: productMarquee 22s linear infinite;
+}
+
+.product-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 999px;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(10px);
+    animation: productBob 4.8s ease-in-out infinite;
+}
+
+.product-chip:nth-child(2n) {
+    animation-delay: -0.8s;
+}
+
+.product-chip:nth-child(3n) {
+    animation-delay: -1.6s;
+}
+
+.product-chip i {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(59, 130, 246, 0.9));
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.22);
+}
+
+.nav-product-marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+.product-chip:hover {
+    transform: translateY(-6px) scale(1.03);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .hero {
@@ -885,6 +973,35 @@ body {
     }
 }
 
+@keyframes productMarquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes productBob {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-track,
+    .product-chip {
+        animation: none;
+    }
+
+    .product-chip:hover {
+        transform: none;
+    }
+}
+
 @media (max-width: 980px) {
     .filters-groups {
         justify-content: flex-start;
@@ -911,6 +1028,21 @@ body {
     .nav-list {
         flex-direction: column;
         text-align: center;
+    }
+
+    .nav-product-marquee::before,
+    .nav-product-marquee::after {
+        width: 44px;
+    }
+
+    .product-chip {
+        padding: 0.65rem 1rem;
+        font-size: 0.92rem;
+    }
+
+    .product-chip i {
+        width: 32px;
+        height: 32px;
     }
 
     .hero-content {
@@ -958,6 +1090,22 @@ body {
 
     .hero {
         padding-top: 2rem;
+    }
+
+    .main-nav {
+        border-radius: 0 0 22px 22px;
+    }
+
+    .nav-product-marquee {
+        padding: 0.75rem 0 0.9rem;
+    }
+
+    .marquee-track {
+        gap: 0.7rem;
+    }
+
+    .product-chip span {
+        white-space: nowrap;
     }
 
     .products-header {

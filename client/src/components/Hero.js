@@ -6,38 +6,96 @@ const HeroSection = styled.section`
   color: white;
   padding: 4rem 0;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+`;
+
+const AnimatedBackground = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+      rgba(29, 78, 216, 0.1) 0%,
+      rgba(15, 23, 42, 0.05) 25%,
+      rgba(249, 115, 22, 0.08) 50%,
+      rgba(29, 78, 216, 0.1) 75%,
+      rgba(15, 23, 42, 0.05) 100%);
+    animation: gradientShift 15s ease infinite;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+`;
+
+const FloatingElement = styled.div`
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: float ${props => props.duration || 8}s ease-in-out infinite;
 `;
 
 const HeroContent = styled.div`
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 32px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  position: relative;
+  z-index: 10;
+  
   h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    margin-bottom: 0.8rem;
     animation: fadeInUp 0.8s ease;
   }
   
   p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    opacity: 0.9;
-    animation: fadeInUp 0.8s ease 0.2s both;
+    font-size: 1.08rem;
+    max-width: 700px;
+    margin: 0 auto 1.8rem;
+    color: rgba(255, 255, 255, 0.82);
+    animation: fadeInUp 0.8s ease 0.15s both;
   }
 `;
 
 const CTAButton = styled.button`
-  background: #ff6b6b;
+  background: linear-gradient(135deg, var(--accent), #fb923c);
   color: white;
   border: none;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  border-radius: 25px;
+  padding: 0.95rem 2rem;
+  font-size: 1rem;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 0.3s;
-  animation: fadeInUp 0.8s ease 0.4s both;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: fadeInUp 0.8s ease 0.3s both;
   
   &:hover {
-    background: #ff5252;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255,107,107,0.3);
+    box-shadow: 0 12px 30px rgba(249, 115, 22, 0.3);
   }
 `;
 
@@ -51,6 +109,62 @@ const Hero = () => {
 
   return (
     <HeroSection>
+      <AnimatedBackground>
+        <FloatingElement 
+          duration={8}
+          style={{
+            width: '120px',
+            height: '120px',
+            top: '10%',
+            left: '10%',
+          }}
+        />
+        <FloatingElement 
+          duration={10}
+          style={{
+            width: '80px',
+            height: '80px',
+            top: '20%',
+            right: '15%',
+          }}
+        />
+        <FloatingElement 
+          duration={12}
+          style={{
+            width: '150px',
+            height: '150px',
+            bottom: '20%',
+            left: '20%',
+          }}
+        />
+        <FloatingElement 
+          duration={9}
+          style={{
+            width: '60px',
+            height: '60px',
+            top: '50%',
+            right: '30%',
+          }}
+        />
+        <FloatingElement 
+          duration={11}
+          style={{
+            width: '100px',
+            height: '100px',
+            bottom: '10%',
+            right: '10%',
+          }}
+        />
+        <FloatingElement 
+          duration={7}
+          style={{
+            width: '90px',
+            height: '90px',
+            top: '70%',
+            left: '40%',
+          }}
+        />
+      </AnimatedBackground>
       <div className="container">
         <HeroContent>
           <h2>Latest Electronics at Best Prices</h2>

@@ -68,6 +68,75 @@ const GlobalStyles = createGlobalStyle`
     100% { transform: rotate(360deg); }
   }
 
+  /* Hero Background Animations */
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-20px) rotate(90deg); }
+    50% { transform: translateY(10px) rotate(180deg); }
+    75% { transform: translateY(-15px) rotate(270deg); }
+  }
+
+  @keyframes float2 {
+    0%, 100% { transform: translateX(0px) translateY(0px) scale(1); }
+    25% { transform: translateX(15px) translateY(-25px) scale(1.1); }
+    50% { transform: translateX(-10px) translateY(15px) scale(0.9); }
+    75% { transform: translateX(20px) translateY(-10px) scale(1.05); }
+  }
+
+  @keyframes float3 {
+    0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+    33% { transform: translateY(-30px) translateX(20px) rotate(120deg); }
+    66% { transform: translateY(20px) translateX(-15px) rotate(240deg); }
+  }
+
+  @keyframes float4 {
+    0%, 100% { transform: translateX(0px) translateY(0px) scale(1); }
+    50% { transform: translateX(-25px) translateY(30px) scale(1.2); }
+  }
+
+  @keyframes float5 {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+    25% { transform: translateY(25px) rotate(-90deg) scale(0.8); }
+    50% { transform: translateY(-15px) rotate(-180deg) scale(1.1); }
+    75% { transform: translateY(20px) rotate(-270deg) scale(0.9); }
+  }
+
+  @keyframes float6 {
+    0%, 100% { transform: translateX(0px) translateY(0px); }
+    20% { transform: translateX(15px) translateY(-20px); }
+    40% { transform: translateX(-10px) translateY(25px); }
+    60% { transform: translateX(20px) translateY(-10px); }
+    80% { transform: translateX(-15px) translateY(15px); }
+  }
+
+  @keyframes gradientShift {
+    0%, 100% { 
+      background-position: 0% 50%;
+      opacity: 0.8;
+    }
+    25% { 
+      background-position: 25% 25%;
+      opacity: 0.6;
+    }
+    50% { 
+      background-position: 100% 50%;
+      opacity: 0.9;
+    }
+    75% { 
+      background-position: 75% 75%;
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { 
+      opacity: 0.3;
+    }
+    50% { 
+      opacity: 0.6;
+    }
+  }
+
   @keyframes slideInRight {
     from {
       transform: translateX(100%);
