@@ -105,31 +105,50 @@ const CartCount = styled.span`
 
 const ProfileDropdown = styled.div`
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 12px);
   right: 0;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
   min-width: 200px;
   z-index: 1002;
   overflow: hidden;
-  pointer-events: auto;
+  border: 1px solid rgba(0,0,0,0.1);
+  opacity: ${props => props.isOpen ? 1 : 0};
+  transform: ${props => props.isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)'};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid white;
+  }
 `;
 
 const DropdownItem = styled.div`
   padding: 0.75rem 1rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   border-bottom: 1px solid #f0f0f;
   color: #000;
+  border-radius: 0;
   
   &:hover {
     background: #f8f9fa;
     color: #000;
+    border-radius: 6px;
+    transform: translateX(2px);
   }
   
   &:last-child {
     border-bottom: none;
+    border-radius: 0 0 6px 6px;
   }
 `;
 
@@ -241,7 +260,7 @@ const Header = () => {
             <UserMenu onClick={toggleProfileDropdown} ref={dropdownRef}>
               <i className="fas fa-user"></i>
               {isProfileOpen && (
-                <ProfileDropdown className="profile-dropdown" ref={dropdownRef}>
+                <ProfileDropdown className="profile-dropdown" isOpen={isProfileOpen} ref={dropdownRef}>
                   <DropdownItem onClick={() => { navigate('/profile'); closeProfileDropdown(); }}>
                     <i className="fas fa-user"></i> Profile
                   </DropdownItem>

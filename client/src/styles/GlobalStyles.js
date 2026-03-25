@@ -68,43 +68,15 @@ const GlobalStyles = createGlobalStyle`
     100% { transform: rotate(360deg); }
   }
 
-  /* Hero Background Animations - Subtle & Professional */
-  @keyframes subtleGradientShift {
-    0%, 100% { 
-      background-position: 0% 50%;
-      opacity: 0.03;
+  /* Profile Dropdown Animation */
+  @keyframes dropdownSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
     }
-    50% { 
-      background-position: 100% 50%;
-      opacity: 0.02;
-    }
-  }
-
-  @keyframes subtlePulse {
-    0%, 100% { 
-      opacity: 0.04;
-    }
-    50% { 
-      opacity: 0.02;
-    }
-  }
-
-  @keyframes subtleFloat {
-    0%, 100% { 
-      transform: translateY(0px) translateX(0px);
-      opacity: 0.7;
-    }
-    25% { 
-      transform: translateY(-8px) translateX(5px);
-      opacity: 0.6;
-    }
-    50% { 
-      transform: translateY(3px) translateX(-3px);
-      opacity: 0.8;
-    }
-    75% { 
-      transform: translateY(-5px) translateX(3px);
-      opacity: 0.6;
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 
