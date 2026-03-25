@@ -23,80 +23,73 @@ class AIImageGenerator {
     const name = productName.toLowerCase();
     const category = productCategory.toLowerCase();
     
-    // Electronics - High-quality tech images
-    if (category === 'electronics') {
-      if (name.includes('headphone') || name.includes('earphone')) {
-        return 'https://images.unsplash.com/photo-1505740420958-88e529a7b6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    // Phones Category - High-quality phone images
+    if (category === 'phones') {
+      if (name.includes('iphone')) {
+        return 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('watch') || name.includes('smartwatch')) {
-        return 'https://images.unsplash.com/photo-1523275335883-b626f84dcf7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('samsung') || name.includes('galaxy')) {
+        return 'https://images.unsplash.com/photo-1580910051074-3eb69488a505?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('camera') || name.includes('dslr')) {
-        return 'https://images.unsplash.com/photo-1542030185086-824a1aa3c5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
-      if (name.includes('laptop') || name.includes('notebook')) {
-        return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
-      if (name.includes('phone') || name.includes('smartphone')) {
+      if (name.includes('oneplus')) {
         return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('keyboard')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('pixel') || name.includes('google')) {
+        return 'https://images.unsplash.com/photo-1592286115803-a1c3b552ee43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('mouse')) {
-        return 'https://images.unsplash.com/photo-1615463149636-5ae231b8044?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
-      if (name.includes('webcam')) {
-        return 'https://images.unsplash.com/photo-1596728348854-9e5171b5b0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
-      if (name.includes('hub') || name.includes('adapter')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
-      if (name.includes('charger')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
-      if (name.includes('monitor') || name.includes('light bar')) {
-        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-      }
+      return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
     }
     
-    // Furniture - Office and home furniture
-    if (category === 'furniture') {
-      if (name.includes('chair') || name.includes('seat')) {
-        return 'https://images.unsplash.com/photo-1586023498325-558dc9a1c77?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    // Electronics Category - Tech and home appliances
+    if (category === 'electronics') {
+      if (name.includes('tv') || name.includes('television') || name.includes('qled')) {
+        return 'https://images.unsplash.com/photo-1593784997442-6469b5a3939e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('desk') || name.includes('table')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('ac') || name.includes('air conditioner')) {
+        return 'https://images.unsplash.com/photo-1580052305799-29f8fe135c3c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('converter') || name.includes('standing')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('refrigerator') || name.includes('fridge')) {
+        return 'https://images.unsplash.com/photo-1584464491033-06608f0fee4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
+      if (name.includes('headphone') || name.includes('earphone') || name.includes('sony')) {
+        return 'https://images.unsplash.com/photo-1505740420958-88e529a7b6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('laptop') || name.includes('macbook') || name.includes('dell')) {
+        return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('ipad') || name.includes('tablet')) {
+        return 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      return 'https://images.unsplash.com/photo-1498049794561-7780e7cd166b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
     }
     
-    // Office Supplies - Professional workspace items
-    if (category === 'office supplies') {
-      if (name.includes('organizer') || name.includes('pen')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    // Fashion Category - Clothing and accessories
+    if (category === 'fashion') {
+      if (name.includes('shoes') || name.includes('nike') || name.includes('adidas')) {
+        return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('box') || name.includes('management')) {
-        return 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('jeans') || name.includes('levi')) {
+        return 'https://images.unsplash.com/photo-1541099649105-f69ef21e335e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('lamp') || name.includes('light')) {
-        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('shirt') || name.includes('polo') || name.includes('ralph lauren')) {
+        return 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-    }
-    
-    // Lighting - Professional lighting products
-    if (category === 'lighting') {
-      if (name.includes('lamp') || name.includes('light')) {
-        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('dress') || name.includes('zara')) {
+        return 'https://images.unsplash.com/photo-1594634319152-14e987837c6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('monitor') || name.includes('tv')) {
-        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('handbag') || name.includes('coach')) {
+        return 'https://images.unsplash.com/photo-1584917865444-70f1e68e4aa3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
-      if (name.includes('rgb') || name.includes('led')) {
-        return 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      if (name.includes('leggings')) {
+        return 'https://images.unsplash.com/photo-1584512673728-48e0e90b9d4c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
       }
+      if (name.includes('sunglasses') || name.includes('ray-ban')) {
+        return 'https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      if (name.includes('watch')) {
+        return 'https://images.unsplash.com/photo-1523275335883-b626f84dcf7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+      }
+      return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
     }
     
     // Default fallback for any product
@@ -107,10 +100,9 @@ class AIImageGenerator {
   getFallbackImage(productName) {
     const category = this.detectCategory(productName);
     const categoryImages = {
+      'phones': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       'electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7cd166b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'furniture': 'https://images.unsplash.com/photo-1586023498325-558dc9a1c77?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'office supplies': 'https://images.unsplash.com/photo-1586950155808-ae2bc00d9c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      'lighting': 'https://images.unsplash.com/photo-1513056857803-7cf5a91db748?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      'fashion': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       'default': 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     };
 
@@ -121,24 +113,25 @@ class AIImageGenerator {
   detectCategory(productName) {
     const name = productName.toLowerCase();
     
-    if (name.includes('headphone') || name.includes('earphone')) return 'electronics';
-    if (name.includes('watch') || name.includes('smartwatch')) return 'electronics';
-    if (name.includes('camera') || name.includes('dslr')) return 'electronics';
-    if (name.includes('laptop') || name.includes('notebook')) return 'electronics';
-    if (name.includes('phone') || name.includes('smartphone')) return 'electronics';
-    if (name.includes('keyboard')) return 'electronics';
-    if (name.includes('mouse')) return 'electronics';
-    if (name.includes('webcam')) return 'electronics';
-    if (name.includes('hub') || name.includes('adapter')) return 'electronics';
-    if (name.includes('charger')) return 'electronics';
-    if (name.includes('monitor') || name.includes('light bar')) return 'lighting';
-    if (name.includes('lamp') || name.includes('light')) return 'lighting';
-    if (name.includes('chair') || name.includes('seat')) return 'furniture';
-    if (name.includes('desk') || name.includes('table')) return 'furniture';
-    if (name.includes('converter') || name.includes('standing')) return 'furniture';
-    if (name.includes('organizer') || name.includes('pen')) return 'office supplies';
-    if (name.includes('box') || name.includes('management')) return 'office supplies';
-    if (name.includes('furniture') || name.includes('sofa')) return 'furniture';
+    // Phones category detection
+    if (name.includes('iphone') || name.includes('samsung') || name.includes('galaxy') || 
+        name.includes('oneplus') || name.includes('pixel') || name.includes('phone') || 
+        name.includes('smartphone')) return 'phones';
+    
+    // Electronics category detection
+    if (name.includes('tv') || name.includes('television') || name.includes('ac') || 
+        name.includes('air conditioner') || name.includes('refrigerator') || name.includes('fridge') ||
+        name.includes('headphone') || name.includes('earphone') || name.includes('sony') ||
+        name.includes('laptop') || name.includes('macbook') || name.includes('dell') ||
+        name.includes('ipad') || name.includes('tablet')) return 'electronics';
+    
+    // Fashion category detection
+    if (name.includes('shoes') || name.includes('nike') || name.includes('adidas') ||
+        name.includes('jeans') || name.includes('levi') || name.includes('shirt') ||
+        name.includes('polo') || name.includes('ralph lauren') || name.includes('dress') ||
+        name.includes('zara') || name.includes('handbag') || name.includes('coach') ||
+        name.includes('leggings') || name.includes('sunglasses') || name.includes('ray-ban') ||
+        name.includes('watch') || name.includes('fashion')) return 'fashion';
     
     return 'electronics'; // Default category
   }

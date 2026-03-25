@@ -179,15 +179,9 @@ const Cart = () => {
     getTotalPrice 
   } = useCart();
 
-  // Convert USD to INR (approximate conversion rate)
-  const convertToINR = (usdPrice) => {
-    const conversionRate = 83; // 1 USD = 83 INR (approximate)
-    return usdPrice * conversionRate;
-  };
-
-  // Format price with INR symbol
+  // Format price with INR symbol (prices are already in INR)
   const formatINRPrice = (price) => {
-    return `₹${convertToINR(price).toLocaleString('en-IN')}`;
+    return `₹${price.toLocaleString('en-IN')}`;
   };
 
   const handleCheckout = () => {
