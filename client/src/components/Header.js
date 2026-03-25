@@ -103,7 +103,35 @@ const CartCount = styled.span`
   font-weight: bold;
 `;
 
+const ProfileDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  min-width: 200px;
+  z-index: 1001;
+  overflow: hidden;
+`;
+
+const DropdownItem = styled.div`
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f0f0f;
+  
+  &:hover {
+    background: #f8f9fa;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
 const UserMenu = styled.div`
+  position: relative;
   cursor: pointer;
   font-size: 1.2rem;
   transition: transform 0.3s;
@@ -143,6 +171,7 @@ const NavLink = styled(Link)`
 
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
   const { getTotalItems, toggleCart } = useCart();
 
@@ -152,6 +181,30 @@ const Header = () => {
       navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
+
+  const toggleProfileDropdown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsProfileOpen(!isProfileOpen);
+  };
+
+  const closeProfileDropdown = () => {
+    setIsProfileOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isProfileOpen && !event.target.closest('.profile-dropdown')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isProfileOpen]);
 
   const cartItemCount = getTotalItems();
 
@@ -178,8 +231,29 @@ const Header = () => {
               <i className="fas fa-shopping-cart"></i>
               {cartItemCount > 0 && <CartCount>{cartItemCount}</CartCount>}
             </CartIcon>
-            <UserMenu>
+            <UserMenu onClick={toggleProfileDropdown}>
               <i className="fas fa-user"></i>
+              {isProfileOpen && (
+                <ProfileDropdown className="profile-dropdown">
+                  <DropdownItem onClick={() => { navigate('/profile'); closeProfileDropdown(); }}>
+                    <i className="fas fa-user"></i> Profile
+                  </DropdownItem>
+                  <DropdownItem onClick={() => { navigate('/orders'); closeProfileDropdown(); }}>
+                    <i className="fas fa-shopping-bag"></i> Orders
+                  </DropdownItem>
+                  <DropdownItem onClick={() => { navigate('/settings'); closeProfileDropdown(); }}>
+                    <i className="fas fa-cog"></i> Settings
+                  </DropdownItem>
+                  <DropdownItem onClick={() => { 
+                    // Handle logout
+                    localStorage.removeItem('token');
+                    navigate('/login'); 
+                    closeProfileDropdown(); 
+                  }}>
+                    <i className="fas fa-sign-out-alt"></i> Logout
+                  </DropdownItem>
+                </ProfileDropdown>
+              )}
             </UserMenu>
           </HeaderActions>
         </HeaderTop>
