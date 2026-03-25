@@ -23,8 +23,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const savedUser = storage.getUser();
       const savedUserData = storage.getUserData();
+      const isLoggedIn = storage.isLoggedIn();
       
-      if (savedUser) {
+      if (isLoggedIn && savedUser) {
         console.log('✅ User found in localStorage:', savedUser);
         setUser(savedUser);
         
@@ -47,9 +48,16 @@ export const AuthProvider = ({ children }) => {
           storage.setUserData(defaultUserData);
         }
       } else {
-        console.log('ℹ️ No user found in localStorage');
+        console.log('ℹ️ User not logged in, but checking for profile data...');
+        // Load profile data even if not logged in
+        if (savedUserData) {
+          console.log('✅ Profile data found:', savedUserData);
+          setUserData(savedUserData);
+        } else {
+          console.log('ℹ️ No profile data found');
+          setUserData(null);
+        }
         setUser(null);
-        setUserData(null);
       }
     } catch (error) {
       console.error('❌ Error checking localStorage:', error);
@@ -172,14 +180,14 @@ export const AuthProvider = ({ children }) => {
     console.log('🚪 Logging out user...');
     
     try {
-      // Remove from localStorage
-      storage.removeUser();
+      // Remove login state only (keep profile data)
+      storage.removeLoginState();
       
       // Clear state
       setUser(null);
-      setUserData(null);
+      // Keep userData in state so profile data persists
       
-      console.log('✅ Logout successful');
+      console.log('✅ Logout successful (profile data preserved)');
       return { success: true };
       
     } catch (error) {

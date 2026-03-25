@@ -4,7 +4,8 @@
 const STORAGE_KEYS = {
   USER: 'techhub_user',
   USER_DATA: 'techhub_user_data',
-  AUTH_TOKEN: 'techhub_auth_token'
+  AUTH_TOKEN: 'techhub_auth_token',
+  IS_LOGGED_IN: 'techhub_is_logged_in'
 };
 
 // Local storage utilities
@@ -13,6 +14,7 @@ export const storage = {
   setUser: (user) => {
     try {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
       console.log('✅ User saved to localStorage');
     } catch (error) {
       console.error('❌ Error saving user to localStorage:', error);
@@ -30,13 +32,36 @@ export const storage = {
     }
   },
 
-  // Remove user data from localStorage
+  // Check if user is logged in
+  isLoggedIn: () => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true';
+    } catch (error) {
+      console.error('❌ Error checking login state:', error);
+      return false;
+    }
+  },
+
+  // Remove login state only (keep profile data)
+  removeLoginState: () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      localStorage.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      console.log('✅ Login state removed from localStorage (profile data preserved)');
+    } catch (error) {
+      console.error('❌ Error removing login state:', error);
+    }
+  },
+
+  // Remove all user data from localStorage
   removeUser: () => {
     try {
       localStorage.removeItem(STORAGE_KEYS.USER);
       localStorage.removeItem(STORAGE_KEYS.USER_DATA);
       localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      console.log('✅ User removed from localStorage');
+      localStorage.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
+      console.log('✅ All user data removed from localStorage');
     } catch (error) {
       console.error('❌ Error removing user from localStorage:', error);
     }
@@ -61,5 +86,34 @@ export const storage = {
       console.error('❌ Error getting user data from localStorage:', error);
       return null;
     }
+  },
+
+  // Convert image to base64 and save
+  saveProfileImage: (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error('No file provided'));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const base64Image = event.target.result;
+          const userData = storage.getUserData() || {};
+          userData.profilePicture = base64Image;
+          storage.setUserData(userData);
+          console.log('✅ Profile image saved as base64');
+          resolve(base64Image);
+        } catch (error) {
+          console.error('❌ Error saving profile image:', error);
+          reject(error);
+        }
+      };
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+      reader.readAsDataURL(file);
+    });
   }
 };

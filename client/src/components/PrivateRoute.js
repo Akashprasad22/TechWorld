@@ -40,13 +40,13 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  // Check both AuthContext state and localStorage as fallback
-  const storedUser = storage.getUser();
-  const isAuthenticated = user || storedUser;
+  // Check login state using storage utility
+  const isLoggedIn = storage.isLoggedIn();
+  const storedUserData = storage.getUserData();
 
-  if (!isAuthenticated) {
+  if (!isLoggedIn) {
     // Redirect to login page with return URL
-    console.log('No user found, redirecting to login');
+    console.log('User not logged in, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { storage } from '../config/storage';
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -280,16 +281,16 @@ const Profile = () => {
     }
     
     try {
-      console.log('Valid image file selected, creating local preview...');
+      console.log('Valid image file selected, converting to base64...');
       
-      // Create local preview using URL.createObjectURL
-      const localPreviewUrl = URL.createObjectURL(file);
-      console.log('Local preview URL created:', localPreviewUrl);
-      setPreviewImage(localPreviewUrl);
+      // Convert image to base64 and save to localStorage
+      const base64Image = await storage.saveProfileImage(file);
+      console.log('Image converted to base64 and saved to localStorage');
+      setPreviewImage(base64Image);
       
       console.log('Image preview set, waiting for save to update profile');
     } catch (error) {
-      console.error('Error creating image preview:', error);
+      console.error('Error processing image:', error);
       alert('Failed to process image. Please try again.');
     }
   };
@@ -328,13 +329,6 @@ const Profile = () => {
     console.log('Current editedUser:', editedUser);
     console.log('Current previewImage:', previewImage);
     
-    // Check if user is authenticated
-    if (!user) {
-      console.error('No authenticated user found');
-      alert('Please login to update your profile');
-      return;
-    }
-    
     try {
       setLoading(true);
       console.log('Loading state set to true');
@@ -348,11 +342,11 @@ const Profile = () => {
       
       let finalProfilePicture = editedUser.profilePicture;
       
-      // Handle image preview - just save the local URL
+      // Handle image preview - save base64 image
       if (previewImage && previewImage !== editedUser.profilePicture) {
-        console.log('Updating profile image with local preview...');
+        console.log('Updating profile image with base64 data...');
         finalProfilePicture = previewImage;
-        console.log('Profile image updated to local URL:', finalProfilePicture);
+        console.log('Profile image updated to base64:', finalProfilePicture);
       }
       
       // Update user profile using AuthContext
