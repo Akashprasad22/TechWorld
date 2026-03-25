@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 // Initialize Firebase (replace with your config)
 const firebaseConfig = {
@@ -218,32 +218,60 @@ const Profile = () => {
   const [editedUser, setEditedUser] = useState(user);
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
-    // Fetch user data from Firebase Firestore
-    const fetchUserData = async () => {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUser(userData);
-            setEditedUser(userData);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          // Fallback to localStorage
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-            setEditedUser(JSON.parse(storedUser));
-          }
-        }
+    // Listen for authentication state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user);
+      setAuthUser(user);
+      
+      if (user) {
+        console.log('User is authenticated, fetching user data...');
+        fetchUserData(user);
+      } else {
+        console.log('No authenticated user, redirecting to login...');
+        navigate('/login');
       }
-    };
-    fetchUserData();
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const fetchUserData = async (currentUser) => {
+    try {
+      console.log('Fetching user data for UID:', currentUser.uid);
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log('User data found:', userData);
+        setUser(userData);
+        setEditedUser(userData);
+      } else {
+        console.log('No user data found, using default with auth info');
+        // Create user data from auth info
+        const defaultUserData = {
+          name: currentUser.displayName || 'User',
+          email: currentUser.email,
+          phone: '',
+          address: '',
+          profilePicture: currentUser.photoURL || null,
+          uid: currentUser.uid
+        };
+        setUser(defaultUserData);
+        setEditedUser(defaultUserData);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Fallback to localStorage
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setEditedUser(JSON.parse(storedUser));
+      }
+    }
+  };
 
   const handleImageChange = async (e) => {
     console.log('handleImageChange triggered');
@@ -298,6 +326,7 @@ const Profile = () => {
 
   const handleSave = async () => {
     console.log('handleSave triggered');
+    console.log('Current authUser:', authUser);
     console.log('Current editedUser:', editedUser);
     console.log('Current previewImage:', previewImage);
     
@@ -305,11 +334,12 @@ const Profile = () => {
       setLoading(true);
       console.log('Loading state set to true');
       
-      const currentUser = auth.currentUser;
-      console.log('Current user:', currentUser);
+      // Use authUser state instead of auth.currentUser
+      const currentUser = authUser;
+      console.log('Current user from authUser state:', currentUser);
       
       if (!currentUser) {
-        console.error('No authenticated user found');
+        console.error('No authenticated user found in authUser state');
         alert('Please login to update your profile');
         return;
       }
@@ -354,7 +384,8 @@ const Profile = () => {
       const updatedUser = {
         ...editedUser,
         profilePicture: finalProfilePicture,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        uid: currentUser.uid
       };
       
       console.log('Updating Firestore with:', updatedUser);
@@ -387,8 +418,10 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
+    console.log('Logging out user...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setAuthUser(null);
     auth.signOut();
     navigate('/login');
   };
