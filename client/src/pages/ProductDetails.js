@@ -149,8 +149,27 @@ const ProductDetails = () => {
   const { id } = useParams();
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [imageError, setImageError] = useState(false);
   
   const product = getProductById(id);
+
+  // Convert USD to INR (approximate conversion rate)
+  const convertToINR = (usdPrice) => {
+    const conversionRate = 83; // 1 USD = 83 INR (approximate)
+    return usdPrice * conversionRate;
+  };
+
+  // Format price with INR symbol
+  const formatINRPrice = (price) => {
+    return `₹${convertToINR(price).toLocaleString('en-IN')}`;
+  };
+
+  // Fallback image URL
+  const fallbackImage = 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&ixid=MnwxOjR2VyWxEWQ1w7W&auto=format&fit=crop&w=800&q=80';
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   if (!product) {
     return (
@@ -186,13 +205,17 @@ const ProductDetails = () => {
   return (
     <ProductDetailsContainer>
       <ProductImageContainer>
-        <ProductImage src={product.image} alt={product.name} />
+        <ProductImage 
+          src={imageError ? fallbackImage : product.image} 
+          alt={product.name}
+          onError={handleImageError}
+        />
       </ProductImageContainer>
       
       <ProductInfoContainer>
         <ProductTitle>{product.name}</ProductTitle>
         <ProductCategory>{product.category}</ProductCategory>
-        <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
+        <ProductPrice>{formatINRPrice(product.price)}</ProductPrice>
         
         {product.rating && (
           <ProductRating>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
@@ -111,6 +111,21 @@ const AddToCartButton = styled.button`
 
 const ProductCard = ({ product }) => {
   const { addItem } = useCart();
+  const [imageError, setImageError] = useState(false);
+
+  // Convert USD to INR (approximate conversion rate)
+  const convertToINR = (usdPrice) => {
+    const conversionRate = 83; // 1 USD = 83 INR (approximate)
+    return usdPrice * conversionRate;
+  };
+
+  // Format price with INR symbol
+  const formatINRPrice = (price) => {
+    return `₹${convertToINR(price).toLocaleString('en-IN')}`;
+  };
+
+  // Fallback image URL
+  const fallbackImage = 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&ixid=MnwxOjR2VyWxEWQ1w7W&auto=format&fit=crop&w=800&q=80';
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -123,6 +138,10 @@ const ProductCard = ({ product }) => {
       image: product.image,
       quantity: 1
     });
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   const renderStars = (rating) => {
@@ -138,12 +157,16 @@ const ProductCard = ({ product }) => {
 
   return (
     <ProductCardContainer>
-      <ProductImage src={product.image} alt={product.name} />
+      <ProductImage 
+        src={imageError ? fallbackImage : product.image} 
+        alt={product.name}
+        onError={handleImageError}
+      />
       <ProductInfo>
         <ProductTitle>{product.name}</ProductTitle>
         <ProductCategory>{product.category}</ProductCategory>
         <ProductDescription>{product.description}</ProductDescription>
-        <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
+        <ProductPrice>{formatINRPrice(product.price)}</ProductPrice>
         {product.rating && (
           <ProductRating>
             {renderStars(product.rating)} ({product.reviews} reviews)

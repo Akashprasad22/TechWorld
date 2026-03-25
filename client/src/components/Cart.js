@@ -179,6 +179,17 @@ const Cart = () => {
     getTotalPrice 
   } = useCart();
 
+  // Convert USD to INR (approximate conversion rate)
+  const convertToINR = (usdPrice) => {
+    const conversionRate = 83; // 1 USD = 83 INR (approximate)
+    return usdPrice * conversionRate;
+  };
+
+  // Format price with INR symbol
+  const formatINRPrice = (price) => {
+    return `₹${convertToINR(price).toLocaleString('en-IN')}`;
+  };
+
   const handleCheckout = () => {
     if (items.length === 0) {
       alert('Your cart is empty!');
@@ -186,7 +197,7 @@ const Cart = () => {
     }
     
     const total = getTotalPrice();
-    alert(`Order placed successfully! Total: ₹${total.toFixed(2)}`);
+    alert(`Order placed successfully! Total: ${formatINRPrice(total)}`);
     // Here you would typically send the order to your backend
     toggleCart();
   };
@@ -214,7 +225,7 @@ const Cart = () => {
                   <CartItemImage src={item.image} alt={item.name} />
                   <CartItemInfo>
                     <CartItemTitle>{item.name}</CartItemTitle>
-                    <CartItemPrice>₹{item.price}</CartItemPrice>
+                    <CartItemPrice>{formatINRPrice(item.price)}</CartItemPrice>
                     <QuantityControls>
                       <QuantityButton 
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -238,7 +249,7 @@ const Cart = () => {
           </CartItems>
           {items.length > 0 && (
             <CartSummary>
-              <CartTotal>Total: ₹{getTotalPrice().toFixed(2)}</CartTotal>
+              <CartTotal>Total: {formatINRPrice(getTotalPrice())}</CartTotal>
               <CheckoutButton onClick={handleCheckout}>
                 Proceed to Checkout
               </CheckoutButton>
