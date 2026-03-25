@@ -51,6 +51,13 @@ const SearchBar = styled.div`
   background: white;
   border-radius: 25px;
   overflow: hidden;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  
+  &:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
   
   input {
     flex: 1;
@@ -59,6 +66,15 @@ const SearchBar = styled.div`
     outline: none;
     font-size: 1rem;
     color: #333;
+    background: transparent;
+    
+    &::placeholder {
+      color: #999;
+    }
+    
+    &:focus {
+      background: #f8f9ff;
+    }
   }
   
   button {

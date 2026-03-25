@@ -213,6 +213,37 @@ const Profile = () => {
   console.log('Profile component - user:', user);
   console.log('Profile component - userData:', userData);
 
+  const inputStyles = {
+    fontSize: '1rem',
+    border: '2px solid #e1e5e9',
+    padding: '0.75rem',
+    borderRadius: '8px',
+    width: '100%',
+    transition: 'all 0.3s ease',
+    outline: 'none',
+    boxSizing: 'border-box'
+  };
+
+  const inputFocusStyles = {
+    ...inputStyles,
+    borderColor: '#667eea',
+    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
+    backgroundColor: '#f8f9ff'
+  };
+
+  const nameInputStyles = {
+    fontSize: '1.8rem',
+    marginBottom: '0.5rem',
+    ...inputStyles
+  };
+
+  const nameInputFocusStyles = {
+    ...nameInputStyles,
+    borderColor: '#667eea',
+    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
+    backgroundColor: '#f8f9ff'
+  };
+
   const handleImageChange = async (e) => {
     console.log('handleImageChange triggered');
     const file = e.target.files[0];
@@ -377,24 +408,32 @@ const Profile = () => {
                   type="text"
                   value={editedUser.name || ''}
                   onChange={(e) => setEditedUser({...editedUser, name: e.target.value})}
-                  style={{ fontSize: '1.8rem', marginBottom: '0.5rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px' }}
+                  style={nameInputStyles}
+                  onFocus={(e) => Object.assign(e.target.style, nameInputFocusStyles)}
+                  onBlur={(e) => Object.assign(e.target.style, nameInputStyles)}
                 />
                 <input
                   type="email"
                   value={editedUser.email || ''}
                   onChange={(e) => setEditedUser({...editedUser, email: e.target.value})}
-                  style={{ fontSize: '1rem', marginBottom: '0.25rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%' }}
+                  style={{...inputStyles, marginBottom: '0.25rem'}}
+                  onFocus={(e) => Object.assign(e.target.style, inputFocusStyles)}
+                  onBlur={(e) => Object.assign(e.target.style, inputStyles)}
                 />
                 <input
                   type="tel"
                   value={editedUser.phone || ''}
                   onChange={(e) => setEditedUser({...editedUser, phone: e.target.value})}
-                  style={{ fontSize: '1rem', marginBottom: '0.25rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%' }}
+                  style={{...inputStyles, marginBottom: '0.25rem'}}
+                  onFocus={(e) => Object.assign(e.target.style, inputFocusStyles)}
+                  onBlur={(e) => Object.assign(e.target.style, inputStyles)}
                 />
                 <textarea
                   value={editedUser.address || ''}
                   onChange={(e) => setEditedUser({...editedUser, address: e.target.value})}
-                  style={{ fontSize: '1rem', border: '1px solid #ddd', padding: '0.5rem', borderRadius: '4px', width: '100%', minHeight: '60px', resize: 'vertical' }}
+                  style={{...inputStyles, minHeight: '80px', resize: 'vertical'}}
+                  onFocus={(e) => Object.assign(e.target.style, inputFocusStyles)}
+                  onBlur={(e) => Object.assign(e.target.style, inputStyles)}
                 />
                 <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
                   <EditButton onClick={handleSave} disabled={loading}>
