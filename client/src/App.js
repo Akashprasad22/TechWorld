@@ -6,6 +6,7 @@ import Hero from './components/Hero';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
+import Profile from './pages/Profile';
 import Footer from './components/Footer';
 import GlobalStyles from './styles/GlobalStyles';
 import styled from 'styled-components';
@@ -38,6 +39,7 @@ function App() {
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/category/:category" element={<ProductsPage />} />
             </Routes>
           </MainContent>

@@ -295,6 +295,7 @@ const Header = () => {
                   <DropdownItem onClick={() => { 
                     // Handle logout
                     localStorage.removeItem('token');
+                    localStorage.removeItem('user');
                     navigate('/login'); 
                     closeProfileDropdown(); 
                   }}>
