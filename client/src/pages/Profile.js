@@ -254,10 +254,9 @@ const Profile = () => {
       // Check file type
       if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
         try {
-          setLoading(true);
-          console.log('Starting image upload...');
+          console.log('Valid image file selected');
           
-          // Show immediate preview
+          // Show immediate preview using FileReader
           const reader = new FileReader();
           reader.onload = (event) => {
             console.log('Local preview generated');
@@ -265,28 +264,10 @@ const Profile = () => {
           };
           reader.readAsDataURL(file);
           
-          // Create a unique filename
-          const fileName = `profile_${Date.now()}_${file.name}`;
-          const storageRef = ref(storage, `profile-pictures/${fileName}`);
-          
-          console.log('Uploading to Firebase Storage...');
-          // Upload to Firebase Storage
-          await uploadBytes(storageRef, file);
-          
-          console.log('Getting download URL...');
-          // Get download URL
-          const downloadURL = await getDownloadURL(storageRef);
-          
-          console.log('Download URL received:', downloadURL);
-          // Update user state with Firebase URL
-          setEditedUser({...editedUser, profilePicture: downloadURL});
-          
-          console.log('Profile picture uploaded successfully:', downloadURL);
+          console.log('Image preview set, waiting for save to upload to Firebase');
         } catch (error) {
-          console.error('Error uploading profile picture:', error);
-          alert('Failed to upload profile picture. Please try again.');
-        } finally {
-          setLoading(false);
+          console.error('Error creating image preview:', error);
+          alert('Failed to process image. Please try again.');
         }
       } else {
         alert('Please select a valid image file (JPG, JPEG, or PNG)');
@@ -322,6 +303,8 @@ const Profile = () => {
     
     try {
       setLoading(true);
+      console.log('Loading state set to true');
+      
       const currentUser = auth.currentUser;
       console.log('Current user:', currentUser);
       
@@ -338,28 +321,61 @@ const Profile = () => {
         return;
       }
       
+      let finalProfilePicture = editedUser.profilePicture;
+      
+      // Upload new image if there's a preview image that's different from current
+      if (previewImage && previewImage !== editedUser.profilePicture) {
+        console.log('Uploading new profile image...');
+        try {
+          // Extract file from preview if it's a blob/data URL
+          const response = await fetch(previewImage);
+          const blob = await response.blob();
+          
+          // Create a unique filename
+          const fileName = `profile_${Date.now()}.jpg`;
+          const storageRef = ref(storage, `profile-pictures/${fileName}`);
+          
+          console.log('Uploading to Firebase Storage...');
+          await uploadBytes(storageRef, blob);
+          
+          console.log('Getting download URL...');
+          finalProfilePicture = await getDownloadURL(storageRef);
+          console.log('New profile image URL:', finalProfilePicture);
+        } catch (error) {
+          console.error('Error uploading profile picture:', error);
+          alert('Failed to upload profile picture. Please try again.');
+          return;
+        }
+      }
+      
       // Update Firestore with user data
+      console.log('Updating Firestore...');
       const userRef = doc(db, 'users', currentUser.uid);
       const updatedUser = {
         ...editedUser,
-        profilePicture: previewImage || editedUser.profilePicture,
+        profilePicture: finalProfilePicture,
         updatedAt: new Date().toISOString()
       };
       
       console.log('Updating Firestore with:', updatedUser);
       await updateDoc(userRef, updatedUser);
+      console.log('Firestore update completed');
       
       // Update local state
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('Local state updated');
       
       setIsEditing(false);
-      console.log('Profile updated successfully in Firebase');
+      console.log('Edit mode disabled');
+      
       alert('Profile updated successfully!');
+      console.log('Profile save process completed successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Failed to update profile. Please try again.');
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
