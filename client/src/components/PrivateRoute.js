@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { storage } from '../config/storage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -39,7 +40,11 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
+  // Check both AuthContext state and localStorage as fallback
+  const storedUser = storage.getUser();
+  const isAuthenticated = user || storedUser;
+
+  if (!isAuthenticated) {
     // Redirect to login page with return URL
     console.log('No user found, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;

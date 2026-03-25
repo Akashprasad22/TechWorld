@@ -1,42 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getApp, initializeApp } from 'firebase/app';
 import { useAuth } from '../context/AuthContext';
-import { firebaseConfig } from '../config/firebase';
-
-// Initialize Firebase app and get storage instance
-let app;
-let storage;
-
-// Function to initialize Firebase Storage
-const initializeFirebaseStorage = () => {
-  try {
-    // Check if Firebase app is already initialized
-    try {
-      app = getApp();
-      console.log('📱 Using existing Firebase app instance');
-    } catch (error) {
-      console.log('🔥 Initializing new Firebase app instance');
-      app = initializeApp(firebaseConfig);
-    }
-    
-    // Initialize Storage
-    storage = getStorage(app);
-    console.log('✅ Firebase Storage initialized successfully');
-    console.log('🗂 Storage bucket:', firebaseConfig.storageBucket);
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Firebase Storage initialization error:', error);
-    console.error('📋 Error details:', error.code, error.message);
-    return false;
-  }
-};
-
-// Initialize storage on module load
-const isStorageInitialized = initializeFirebaseStorage();
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -315,21 +280,14 @@ const Profile = () => {
     }
     
     try {
-      console.log('Valid image file selected, creating preview...');
+      console.log('Valid image file selected, creating local preview...');
       
-      // Show immediate preview using FileReader
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        console.log('Local preview generated successfully');
-        setPreviewImage(event.target.result);
-      };
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-        alert('Failed to read the selected image');
-      };
-      reader.readAsDataURL(file);
+      // Create local preview using URL.createObjectURL
+      const localPreviewUrl = URL.createObjectURL(file);
+      console.log('Local preview URL created:', localPreviewUrl);
+      setPreviewImage(localPreviewUrl);
       
-      console.log('Image preview set, waiting for save to upload to Firebase');
+      console.log('Image preview set, waiting for save to update profile');
     } catch (error) {
       console.error('Error creating image preview:', error);
       alert('Failed to process image. Please try again.');
@@ -367,7 +325,6 @@ const Profile = () => {
 
   const handleSave = async () => {
     console.log('handleSave triggered');
-    console.log('Storage initialized:', isStorageInitialized);
     console.log('Current editedUser:', editedUser);
     console.log('Current previewImage:', previewImage);
     
@@ -375,14 +332,6 @@ const Profile = () => {
     if (!user) {
       console.error('No authenticated user found');
       alert('Please login to update your profile');
-      return;
-    }
-    
-    // Check if Firebase Storage is properly initialized
-    if (!isStorageInitialized || !storage) {
-      console.error('Firebase Storage not properly initialized');
-      console.log('Firebase config:', firebaseConfig);
-      alert('Firebase Storage not properly configured. Please check your Firebase settings.');
       return;
     }
     
@@ -399,56 +348,11 @@ const Profile = () => {
       
       let finalProfilePicture = editedUser.profilePicture;
       
-      // Upload new image if there's a preview image that's different from current
+      // Handle image preview - just save the local URL
       if (previewImage && previewImage !== editedUser.profilePicture) {
-        console.log('Uploading new profile image...');
-        
-        try {
-          // Get the actual file from the file input
-          const fileInput = document.getElementById('profile-picture-input');
-          const file = fileInput.files[0];
-          
-          if (!file) {
-            console.error('No file found in input');
-            throw new Error('No file selected');
-          }
-          
-          console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
-          console.log('User UID:', user.uid);
-          
-          // Create a unique filename with user UID
-          const fileName = `profile_${user.uid}_${Date.now()}_${file.name}`;
-          const storageRef = ref(storage, `profile-pictures/${fileName}`);
-          
-          console.log('Storage reference created:', storageRef.fullPath);
-          console.log('Starting Firebase Storage upload...');
-          
-          // Upload to Firebase Storage
-          const uploadResult = await uploadBytes(storageRef, file);
-          console.log('Upload completed successfully:', uploadResult);
-          
-          console.log('Getting download URL...');
-          finalProfilePicture = await getDownloadURL(storageRef);
-          console.log('Download URL received:', finalProfilePicture);
-          
-        } catch (uploadError) {
-          console.error('Firebase Storage upload error:', uploadError);
-          console.error('Error code:', uploadError.code);
-          console.error('Error message:', uploadError.message);
-          
-          // Provide specific error messages
-          if (uploadError.code === 'storage/unauthorized') {
-            throw new Error('Storage access denied. Please check Firebase Storage rules in the Firebase console.');
-          } else if (uploadError.code === 'storage/canceled') {
-            throw new Error('Upload was cancelled');
-          } else if (uploadError.code === 'storage/unknown') {
-            throw new Error('Storage error: ' + uploadError.message);
-          } else if (uploadError.code === 'storage/retry-limit-exceeded') {
-            throw new Error('Upload retry limit exceeded. Please try again later.');
-          } else {
-            throw new Error('Failed to upload image: ' + uploadError.message);
-          }
-        }
+        console.log('Updating profile image with local preview...');
+        finalProfilePicture = previewImage;
+        console.log('Profile image updated to local URL:', finalProfilePicture);
       }
       
       // Update user profile using AuthContext

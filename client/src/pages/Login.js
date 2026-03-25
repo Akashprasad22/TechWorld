@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
-import { firebaseConfig } from '../config/firebase';
 
 const LoginContainer = styled.div`
   max-width: 400px;
@@ -114,7 +112,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-  const { updateUserProfile } = useAuth();
+  const { login, signup } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -123,53 +121,44 @@ const Login = () => {
     setSuccess('');
 
     try {
-      const auth = getAuth();
-      
       if (isSignUp) {
         // Sign up
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        console.log('User signed up:', userCredential.user);
+        console.log('Attempting signup with:', name, email);
+        const result = await signup(name, email, password);
         
-        // Create user profile
-        await updateUserProfile({
-          name: name,
-          email: email,
-          phone: '',
-          address: '',
-          profilePicture: null
-        });
-        
-        setSuccess('Account created successfully! Redirecting...');
-        setTimeout(() => navigate('/profile'), 2000);
+        if (result.success) {
+          console.log('User signed up successfully:', result.user);
+          setSuccess('Account created successfully! Redirecting to homepage...');
+          setTimeout(() => navigate('/'), 2000);
+        } else {
+          throw new Error(result.error);
+        }
       } else {
         // Sign in
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('User signed in:', userCredential.user);
-        setSuccess('Login successful! Redirecting to homepage...');
-        setTimeout(() => navigate('/'), 1500);
+        console.log('Attempting login with:', email);
+        const result = await login(email, password);
+        
+        if (result.success) {
+          console.log('User signed in successfully:', result.user);
+          setSuccess('Login successful! Redirecting to homepage...');
+          setTimeout(() => navigate('/'), 1500);
+        } else {
+          throw new Error(result.error);
+        }
       }
     } catch (error) {
       console.error('Authentication error:', error);
       let errorMessage = 'An error occurred. Please try again.';
       
-      switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email.';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password.';
-          break;
-        case 'auth/email-already-in-use':
-          errorMessage = 'An account with this email already exists.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'Password should be at least 6 characters.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        default:
-          errorMessage = error.message;
+      // Handle specific error messages
+      if (error.message.includes('already exists')) {
+        errorMessage = 'An account with this email already exists.';
+      } else if (error.message.includes('password')) {
+        errorMessage = 'Password should be at least 6 characters.';
+      } else if (error.message.includes('email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else {
+        errorMessage = error.message || 'Failed to authenticate. Please try again.';
       }
       
       setError(errorMessage);

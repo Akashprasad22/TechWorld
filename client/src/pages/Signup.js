@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
-import { firebaseConfig } from '../config/firebase';
 
 const SignupContainer = styled.div`
   max-width: 400px;
@@ -118,7 +116,7 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-  const { updateUserProfile } = useAuth();
+  const { signup } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -141,47 +139,32 @@ const Signup = () => {
     }
 
     try {
-      const auth = getAuth();
       console.log('Creating user account with email:', email);
       
-      // Create user with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('User created successfully:', userCredential.user);
+      // Create user with AuthContext
+      const result = await signup(name, email, password);
       
-      // Create user profile in Firestore
-      await updateUserProfile({
-        name: name,
-        email: email,
-        phone: '',
-        address: '',
-        profilePicture: null
-      });
-      
-      setSuccess('Account created successfully! Redirecting to homepage...');
-      setTimeout(() => navigate('/'), 2000);
+      if (result.success) {
+        console.log('User created successfully:', result.user);
+        setSuccess('Account created successfully! Redirecting to homepage...');
+        setTimeout(() => navigate('/'), 2000);
+      } else {
+        throw new Error(result.error);
+      }
       
     } catch (error) {
       console.error('Signup error:', error);
       let errorMessage = 'An error occurred. Please try again.';
       
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'An account with this email already exists.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'Password should be at least 6 characters.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/api-key-not-valid':
-          errorMessage = 'Firebase configuration error. Please check your API key.';
-          break;
-        case 'auth/operation-not-allowed':
-          errorMessage = 'Email/password accounts are not enabled.';
-          break;
-        default:
-          errorMessage = error.message || 'Failed to create account. Please try again.';
+      // Handle specific error messages
+      if (error.message.includes('already exists')) {
+        errorMessage = 'An account with this email already exists.';
+      } else if (error.message.includes('password')) {
+        errorMessage = 'Password should be at least 6 characters.';
+      } else if (error.message.includes('email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else {
+        errorMessage = error.message || 'Failed to create account. Please try again.';
       }
       
       setError(errorMessage);

@@ -1,32 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { initializeApp } from 'firebase/app';
-import { firebaseConfig, validateFirebaseConfig } from '../config/firebase';
-
-let app;
-let auth;
-let db;
-
-// Validate Firebase configuration before initialization
-if (!validateFirebaseConfig()) {
-  console.error('🚨 Firebase configuration is invalid. Please fix the config values in src/config/firebase.js');
-  // Don't initialize Firebase with invalid config
-} else {
-  try {
-    console.log('🔥 Initializing Firebase with validated config...');
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    console.log('✅ Firebase initialized successfully');
-    console.log('📊 Project ID:', firebaseConfig.projectId);
-    console.log('🔧 Auth Domain:', firebaseConfig.authDomain);
-  } catch (error) {
-    console.error('❌ Firebase initialization error:', error);
-    console.error('📋 Error details:', error.code, error.message);
-    console.error('🔧 Please check your Firebase configuration in src/config/firebase.js');
-  }
-}
+import { storage } from '../config/storage';
 
 const AuthContext = createContext();
 
@@ -43,106 +16,175 @@ export const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Check localStorage on mount
   useEffect(() => {
-    console.log('Setting up auth listener...');
+    console.log('🔍 Checking localStorage for user data...');
     
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Auth state changed:', firebaseUser);
+    try {
+      const savedUser = storage.getUser();
+      const savedUserData = storage.getUserData();
       
-      if (firebaseUser) {
-        console.log('User is authenticated:', firebaseUser.uid);
-        setUser(firebaseUser);
+      if (savedUser) {
+        console.log('✅ User found in localStorage:', savedUser);
+        setUser(savedUser);
         
-        // Fetch user data from Firestore
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            console.log('User data found:', data);
-            setUserData(data);
-          } else {
-            console.log('No user data found, creating default profile...');
-            // Create default user profile
-            const defaultUserData = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              name: firebaseUser.displayName || 'User',
-              phone: '',
-              address: '',
-              profilePicture: firebaseUser.photoURL || null,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            
-            await setDoc(doc(db, 'users', firebaseUser.uid), defaultUserData);
-            setUserData(defaultUserData);
-            console.log('Default user profile created:', defaultUserData);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          // Set minimal user data even if Firestore fails
-          setUserData({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName || 'User',
+        if (savedUserData) {
+          console.log('✅ User data found in localStorage:', savedUserData);
+          setUserData(savedUserData);
+        } else {
+          // Create default user data if not exists
+          const defaultUserData = {
+            uid: savedUser.email,
+            email: savedUser.email,
+            name: savedUser.name || 'User',
             phone: '',
             address: '',
-            profilePicture: firebaseUser.photoURL || null
-          });
+            profilePicture: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          setUserData(defaultUserData);
+          storage.setUserData(defaultUserData);
         }
       } else {
-        console.log('No authenticated user');
+        console.log('ℹ️ No user found in localStorage');
         setUser(null);
         setUserData(null);
       }
-      
-      setLoading(false);
-    });
-
-    return () => {
-      console.log('Cleaning up auth listener...');
-      unsubscribe();
-    };
+    } catch (error) {
+      console.error('❌ Error checking localStorage:', error);
+      setUser(null);
+      setUserData(null);
+    }
+    
+    setLoading(false);
   }, []);
 
-  const updateUserProfile = async (profileData) => {
-    console.log('Updating user profile:', profileData);
+  // Login function
+  const login = async (email, password) => {
+    console.log('🔐 Attempting login with email:', email);
     
-    if (!user) {
-      console.error('No authenticated user for profile update');
-      throw new Error('No authenticated user');
-    }
-
     try {
-      const userRef = doc(db, 'users', user.uid);
-      const updatedData = {
-        ...profileData,
-        uid: user.uid,
-        updatedAt: new Date().toISOString()
+      // Simple mock authentication (in real app, this would be an API call)
+      const mockUser = {
+        email: email,
+        name: email.split('@')[0], // Use email prefix as name
+        uid: email, // Use email as UID
+        createdAt: new Date().toISOString()
       };
-
-      await setDoc(userRef, updatedData, { merge: true });
-      setUserData(updatedData);
       
-      console.log('Profile updated successfully:', updatedData);
-      return updatedData;
+      // Save to localStorage
+      storage.setUser(mockUser);
+      
+      // Create default user data if not exists
+      const existingUserData = storage.getUserData();
+      if (!existingUserData) {
+        const defaultUserData = {
+          uid: email,
+          email: email,
+          name: mockUser.name,
+          phone: '',
+          address: '',
+          profilePicture: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        storage.setUserData(defaultUserData);
+        setUserData(defaultUserData);
+      }
+      
+      setUser(mockUser);
+      console.log('✅ Login successful:', mockUser);
+      return { success: true, user: mockUser };
+      
     } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
+      console.error('❌ Login error:', error);
+      return { success: false, error: 'Login failed. Please try again.' };
     }
   };
 
-  const logout = async () => {
-    console.log('Logging out user...');
+  // Signup function
+  const signup = async (name, email, password) => {
+    console.log('📝 Attempting signup with email:', email);
+    
     try {
-      await signOut(auth);
+      // Simple mock signup (in real app, this would be an API call)
+      const mockUser = {
+        email: email,
+        name: name,
+        uid: email, // Use email as UID
+        createdAt: new Date().toISOString()
+      };
+      
+      // Save to localStorage
+      storage.setUser(mockUser);
+      
+      // Create user data
+      const userData = {
+        uid: email,
+        email: email,
+        name: name,
+        phone: '',
+        address: '',
+        profilePicture: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      storage.setUserData(userData);
+      setUserData(userData);
+      setUser(mockUser);
+      
+      console.log('✅ Signup successful:', mockUser);
+      return { success: true, user: mockUser };
+      
+    } catch (error) {
+      console.error('❌ Signup error:', error);
+      return { success: false, error: 'Signup failed. Please try again.' };
+    }
+  };
+
+  // Update user profile function
+  const updateUserProfile = async (newUserData) => {
+    console.log('🔄 Updating user profile:', newUserData);
+    
+    try {
+      const updatedUserData = {
+        ...newUserData,
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Save to localStorage
+      storage.setUserData(updatedUserData);
+      setUserData(updatedUserData);
+      
+      console.log('✅ Profile updated successfully');
+      return { success: true };
+      
+    } catch (error) {
+      console.error('❌ Profile update error:', error);
+      return { success: false, error: 'Failed to update profile' };
+    }
+  };
+
+  // Logout function
+  const logout = async () => {
+    console.log('🚪 Logging out user...');
+    
+    try {
+      // Remove from localStorage
+      storage.removeUser();
+      
+      // Clear state
       setUser(null);
       setUserData(null);
-      console.log('User logged out successfully');
+      
+      console.log('✅ Logout successful');
+      return { success: true };
+      
     } catch (error) {
-      console.error('Error logging out:', error);
-      throw error;
+      console.error('❌ Logout error:', error);
+      return { success: false, error: 'Logout failed' };
     }
   };
 
@@ -150,6 +192,8 @@ export const AuthProvider = ({ children }) => {
     user,
     userData,
     loading,
+    login,
+    signup,
     updateUserProfile,
     logout,
     isAuthenticated: !!user
@@ -157,7 +201,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
