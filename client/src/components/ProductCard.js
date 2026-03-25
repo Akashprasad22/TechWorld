@@ -40,6 +40,10 @@ const ProductDescription = styled.p`
   font-size: 0.9rem;
   margin-bottom: 1rem;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 const ProductPrice = styled.div`
@@ -49,83 +53,112 @@ const ProductPrice = styled.div`
   margin-bottom: 0.5rem;
 `;
 
+const ProductCategory = styled.div`
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
 const ProductRating = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
-`;
-
-const Stars = styled.span`
-  color: #ffd700;
-`;
-
-const RatingCount = styled.span`
-  color: #666;
   font-size: 0.9rem;
+  color: #666;
 `;
 
-const AddToCartButton = styled.button`
-  width: 100%;
+const ProductActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const ViewDetailsButton = styled(Link)`
+  flex: 1;
+  text-align: center;
+  padding: 0.8rem;
   background: #667eea;
   color: white;
-  border: none;
-  padding: 0.8rem;
+  text-decoration: none;
   border-radius: 5px;
-  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
   transition: background 0.3s;
-  font-size: 1rem;
   
   &:hover {
     background: #5a67d8;
   }
 `;
 
+const AddToCartButton = styled.button`
+  flex: 1;
+  padding: 0.8rem;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  
+  &:hover {
+    background: #ff5252;
+  }
+`;
+
 const ProductCard = ({ product }) => {
-  const { addToCart } = useCart();
+  const { addItem } = useCart();
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+    
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1
+    });
   };
 
-  const generateStars = (rating) => {
+  const renderStars = (rating) => {
+    const stars = [];
     const fullStars = Math.floor(rating);
-    const halfStar = rating % 1 >= 0.5 ? 1 : 0;
-    const emptyStars = 5 - fullStars - halfStar;
     
-    let stars = '';
     for (let i = 0; i < fullStars; i++) {
-      stars += '★';
+      stars.push('⭐');
     }
-    if (halfStar) {
-      stars += '☆';
-    }
-    for (let i = 0; i < emptyStars; i++) {
-      stars += '☆';
-    }
-    return stars;
+    
+    return stars.join('');
   };
 
   return (
-    <Link to={`/product/${product.id}`}>
-      <ProductCardContainer>
-        <ProductImage src={product.image} alt={product.name} />
-        <ProductInfo>
-          <ProductTitle>{product.name}</ProductTitle>
-          <ProductDescription>{product.description}</ProductDescription>
-          <ProductPrice>₹{product.price}</ProductPrice>
+    <ProductCardContainer>
+      <ProductImage src={product.image} alt={product.name} />
+      <ProductInfo>
+        <ProductTitle>{product.name}</ProductTitle>
+        <ProductCategory>{product.category}</ProductCategory>
+        <ProductDescription>{product.description}</ProductDescription>
+        <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
+        {product.rating && (
           <ProductRating>
-            <Stars>{generateStars(product.rating)}</Stars>
-            <RatingCount>({product.reviews})</RatingCount>
+            {renderStars(product.rating)} ({product.reviews} reviews)
           </ProductRating>
+        )}
+        <ProductActions>
+          <ViewDetailsButton to={`/product/${product.id}`}>
+            View Details
+          </ViewDetailsButton>
           <AddToCartButton onClick={handleAddToCart}>
-            <i className="fas fa-shopping-cart"></i> Add to Cart
+            Add to Cart
           </AddToCartButton>
-        </ProductInfo>
-      </ProductCardContainer>
-    </Link>
+        </ProductActions>
+      </ProductInfo>
+    </ProductCardContainer>
   );
 };
 

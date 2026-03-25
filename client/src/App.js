@@ -5,7 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import ProductsPage from './pages/ProductsPage';
-import ProductDetailPage from './pages/ProductDetailPage';
+import ProductDetails from './pages/ProductDetails';
 import CartPage from './pages/CartPage';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
@@ -68,7 +68,7 @@ function App() {
                   <>
                     <Header />
                     <MainContent>
-                      <ProductDetailPage />
+                      <ProductDetails />
                     </MainContent>
                     <Footer />
                   </>
