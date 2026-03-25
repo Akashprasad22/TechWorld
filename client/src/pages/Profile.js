@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { initializeApp } from 'firebase/app';
+
+// Initialize Firebase (replace with your config)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 const ProfileContainer = styled.div`
   max-width: 1200px;
@@ -198,17 +213,34 @@ const Profile = () => {
     }
   }, []);
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       // Check file type
       if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setPreviewImage(event.target.result);
-          setEditedUser({...editedUser, profilePicture: event.target.result});
-        };
-        reader.readAsDataURL(file);
+        try {
+          // Show loading state
+          setIsEditing(true);
+          
+          // Create a unique filename
+          const fileName = `profile_${Date.now()}_${file.name}`;
+          const storageRef = ref(storage, `profile-pictures/${fileName}`);
+          
+          // Upload to Firebase Storage
+          await uploadBytes(storageRef, file);
+          
+          // Get download URL
+          const downloadURL = await getDownloadURL(storageRef);
+          
+          // Update user state with Firebase URL
+          setPreviewImage(downloadURL);
+          setEditedUser({...editedUser, profilePicture: downloadURL});
+          
+          console.log('Profile picture uploaded successfully:', downloadURL);
+        } catch (error) {
+          console.error('Error uploading profile picture:', error);
+          alert('Failed to upload profile picture. Please try again.');
+        }
       } else {
         alert('Please select a valid image file (JPG, JPEG, or PNG)');
       }
@@ -230,6 +262,7 @@ const Profile = () => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setIsEditing(false);
+    console.log('Profile updated with Firebase URL:', updatedUser.profilePicture);
   };
 
   const handleCancel = () => {
