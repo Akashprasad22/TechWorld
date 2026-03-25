@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
@@ -105,14 +105,15 @@ const CartCount = styled.span`
 
 const ProfileDropdown = styled.div`
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   right: 0;
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   min-width: 200px;
-  z-index: 1001;
+  z-index: 1002;
   overflow: hidden;
+  pointer-events: auto;
 `;
 
 const DropdownItem = styled.div`
@@ -172,6 +173,7 @@ const NavLink = styled(Link)`
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { getTotalItems, toggleCart } = useCart();
 
@@ -193,16 +195,19 @@ const Header = () => {
   };
 
   // Close dropdown when clicking outside
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isProfileOpen && !event.target.closest('.profile-dropdown')) {
+      if (isProfileOpen && dropdownRef.current && 
+          !dropdownRef.current.contains(event.target) && 
+          !event.target.closest('.profile-dropdown')) {
         setIsProfileOpen(false);
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isProfileOpen]);
 
@@ -231,10 +236,10 @@ const Header = () => {
               <i className="fas fa-shopping-cart"></i>
               {cartItemCount > 0 && <CartCount>{cartItemCount}</CartCount>}
             </CartIcon>
-            <UserMenu onClick={toggleProfileDropdown}>
+            <UserMenu onClick={toggleProfileDropdown} ref={dropdownRef}>
               <i className="fas fa-user"></i>
               {isProfileOpen && (
-                <ProfileDropdown className="profile-dropdown">
+                <ProfileDropdown className="profile-dropdown" ref={dropdownRef}>
                   <DropdownItem onClick={() => { navigate('/profile'); closeProfileDropdown(); }}>
                     <i className="fas fa-user"></i> Profile
                   </DropdownItem>
