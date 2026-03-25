@@ -4,16 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getApp, initializeApp } from 'firebase/app';
 import { useAuth } from '../context/AuthContext';
-
-// Initialize Firebase (replace with your config)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+import { firebaseConfig } from '../config/firebase';
 
 // Initialize Firebase app and get storage instance
 let app;
@@ -25,21 +16,21 @@ const initializeFirebaseStorage = () => {
     // Check if Firebase app is already initialized
     try {
       app = getApp();
-      console.log('Using existing Firebase app instance');
+      console.log('📱 Using existing Firebase app instance');
     } catch (error) {
-      console.log('Initializing new Firebase app instance');
+      console.log('🔥 Initializing new Firebase app instance');
       app = initializeApp(firebaseConfig);
     }
     
     // Initialize Storage
     storage = getStorage(app);
-    console.log('Firebase Storage initialized successfully');
-    console.log('Storage bucket:', firebaseConfig.storageBucket);
+    console.log('✅ Firebase Storage initialized successfully');
+    console.log('🗂 Storage bucket:', firebaseConfig.storageBucket);
     
     return true;
   } catch (error) {
-    console.error('Firebase Storage initialization error:', error);
-    console.error('Error details:', error.code, error.message);
+    console.error('❌ Firebase Storage initialization error:', error);
+    console.error('📋 Error details:', error.code, error.message);
     return false;
   }
 };

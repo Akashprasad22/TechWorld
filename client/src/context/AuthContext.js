@@ -2,31 +2,30 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
-
-// Initialize Firebase (replace with your config)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+import { firebaseConfig, validateFirebaseConfig } from '../config/firebase';
 
 let app;
 let auth;
 let db;
 
-try {
-  console.log('Initializing Firebase with config:', firebaseConfig);
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  console.log('Firebase initialized successfully');
-} catch (error) {
-  console.error('Firebase initialization error:', error);
-  console.error('Please check your Firebase configuration in AuthContext.js');
-  console.error('Error details:', error.code, error.message);
+// Validate Firebase configuration before initialization
+if (!validateFirebaseConfig()) {
+  console.error('🚨 Firebase configuration is invalid. Please fix the config values in src/config/firebase.js');
+  // Don't initialize Firebase with invalid config
+} else {
+  try {
+    console.log('🔥 Initializing Firebase with validated config...');
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log('✅ Firebase initialized successfully');
+    console.log('📊 Project ID:', firebaseConfig.projectId);
+    console.log('🔧 Auth Domain:', firebaseConfig.authDomain);
+  } catch (error) {
+    console.error('❌ Firebase initialization error:', error);
+    console.error('📋 Error details:', error.code, error.message);
+    console.error('🔧 Please check your Firebase configuration in src/config/firebase.js');
+  }
 }
 
 const AuthContext = createContext();

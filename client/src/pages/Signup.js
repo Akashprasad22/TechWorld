@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
+import { firebaseConfig } from '../config/firebase';
 
 const SignupContainer = styled.div`
   max-width: 400px;
