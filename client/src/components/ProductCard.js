@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { generateProductImage } from '../services/aiImageGenerator';
 
 const ProductCardContainer = styled.div`
@@ -11,7 +12,7 @@ const ProductCardContainer = styled.div`
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   transition: all 0.3s;
   cursor: pointer;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 20px rgba(0,0,0,0.15);
@@ -87,7 +88,7 @@ const ViewDetailsButton = styled(Link)`
   font-size: 0.9rem;
   font-weight: 600;
   transition: background 0.3s;
-  
+
   &:hover {
     background: #5a67d8;
   }
@@ -104,7 +105,7 @@ const AddToCartButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s;
-  
+
   &:hover {
     background: #ff5252;
   }
@@ -112,10 +113,7 @@ const AddToCartButton = styled.button`
 
 const ImageGeneratingOverlay = styled.div`
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
@@ -132,7 +130,7 @@ const GeneratingSpinner = styled.div`
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
-  
+
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -154,30 +152,50 @@ const ImageReplacedBadge = styled.div`
   font-weight: 600;
   margin-bottom: 1rem;
   display: inline-block;
-  animation: fadeIn 0.5s ease-in;
-  
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(-10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
 `;
 
+const ProductMedia = styled.div`
+  position: relative;
+`;
+
+const renderStars = (rating) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+
+  for (let index = 0; index < fullStars; index += 1) {
+    stars.push('★');
+  }
+
+  return stars.join('');
+};
+
+const formatPrice = (price) => {
+  if (typeof price !== 'number') {
+    return price;
+  }
+
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
 const ProductCard = ({ product }) => {
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
 
-  // Format price with INR symbol (prices are already in INR)
-  const formatINRPrice = (price) => {
-    return `₹${price.toLocaleString('en-IN')}`;
-  };
-
-  // Generate AI image when original image fails
   const generateAIImage = async () => {
     setIsGeneratingImage(true);
     try {
-      const aiImageUrl = await generateProductImage(product.name, product.description, product.category);
+      const aiImageUrl = await generateProductImage(
+        product.name,
+        product.description,
+        product.category
+      );
       setAiGeneratedImage(aiImageUrl);
       setImageError(false);
     } catch (error) {
@@ -188,7 +206,6 @@ const ProductCard = ({ product }) => {
     }
   };
 
-  // Handle image error and trigger AI generation
   const handleImageError = async () => {
     if (!aiGeneratedImage && !isGeneratingImage) {
       await generateAIImage();
@@ -197,55 +214,59 @@ const ProductCard = ({ product }) => {
     }
   };
 
-  // Get current image source
   const getCurrentImageSrc = () => {
-    if (aiGeneratedImage) return aiGeneratedImage;
-    if (imageError) return 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    if (aiGeneratedImage) {
+      return aiGeneratedImage;
+    }
+
+    if (imageError) {
+      return 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    }
+
     return product.image;
   };
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    addItem({
+  const handleAddToCart = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
+      description: product.description,
       image: getCurrentImageSrc(),
-      quantity: 1
+      quantity: 1,
+      userId: user?.id,
     });
   };
 
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push('⭐');
-    }
-    
-    return stars.join('');
-  };
+  const categoryLabel = product.brand
+    ? `${product.category} • ${product.brand}`
+    : product.gender
+      ? `${product.category} • ${product.gender}`
+      : product.category;
 
   return (
     <ProductCardContainer>
-      <ProductImage 
-        src={getCurrentImageSrc()} 
-        alt={product.name}
-        onError={handleImageError}
-      />
-      {isGeneratingImage && (
-        <ImageGeneratingOverlay>
-          <GeneratingSpinner />
-          <GeneratingText>Generating AI Image...</GeneratingText>
-        </ImageGeneratingOverlay>
-      )}
+      <ProductMedia>
+        <ProductImage
+          src={getCurrentImageSrc()}
+          alt={product.name}
+          onError={handleImageError}
+        />
+        {isGeneratingImage && (
+          <ImageGeneratingOverlay>
+            <GeneratingSpinner />
+            <GeneratingText>Generating AI Image...</GeneratingText>
+          </ImageGeneratingOverlay>
+        )}
+      </ProductMedia>
       <ProductInfo>
         <ProductTitle>{product.name}</ProductTitle>
-        <ProductCategory>{product.category}</ProductCategory>
+        <ProductCategory>{categoryLabel}</ProductCategory>
         <ProductDescription>{product.description}</ProductDescription>
-        <ProductPrice>{formatINRPrice(product.price)}</ProductPrice>
+        <ProductPrice>{product.priceLabel || formatPrice(product.price)}</ProductPrice>
         {product.rating && (
           <ProductRating>
             {renderStars(product.rating)} ({product.reviews} reviews)

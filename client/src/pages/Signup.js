@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { useNavigate, Link } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { SignUp } from '@clerk/react';
 import { useAuth } from '../context/AuthContext';
+import { clerkSharedAppearance } from '../config/clerkAuth';
 
 const SignupContainer = styled.div`
   max-width: 400px;
@@ -19,222 +21,25 @@ const SignupTitle = styled.h2`
   font-size: 2rem;
 `;
 
-const SignupForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const InputGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-`;
-
-const Input = styled.input`
-  padding: 0.75rem;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  outline: none;
-  
-  &:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    background: #f8f9ff;
-  }
-`;
-
-const Button = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const ErrorMessage = styled.div`
-  color: #dc3545;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  text-align: center;
-`;
-
-const SuccessMessage = styled.div`
-  color: #28a745;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  text-align: center;
-`;
-
-const LoginLink = styled.div`
-  text-align: center;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  color: #666;
-  
-  a {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 600;
-    
-    &:hover {
-      color: #764ba2;
-      text-decoration: underline;
-    }
-  }
-`;
-
 const Signup = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const navigate = useNavigate();
-  const { signup } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const redirectTo = location.state?.from?.pathname || '/';
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    // Validate password strength
-    if (password.length < 6) {
-      setError('Password should be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      console.log('Creating user account with email:', email);
-      
-      // Create user with AuthContext
-      const result = await signup(name, email, password);
-      
-      if (result.success) {
-        console.log('User created successfully:', result.user);
-        setSuccess('Account created successfully! Redirecting to homepage...');
-        setTimeout(() => navigate('/'), 2000);
-      } else {
-        throw new Error(result.error);
-      }
-      
-    } catch (error) {
-      console.error('Signup error:', error);
-      let errorMessage = 'An error occurred. Please try again.';
-      
-      // Handle specific error messages
-      if (error.message.includes('already exists')) {
-        errorMessage = 'An account with this email already exists.';
-      } else if (error.message.includes('password')) {
-        errorMessage = 'Password should be at least 6 characters.';
-      } else if (error.message.includes('email')) {
-        errorMessage = 'Please enter a valid email address.';
-      } else {
-        errorMessage = error.message || 'Failed to create account. Please try again.';
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isAuthenticated) {
+    return <Navigate to={redirectTo} replace />;
+  }
 
   return (
     <SignupContainer>
       <SignupTitle>Create Account</SignupTitle>
-      
-      <SignupForm onSubmit={handleSubmit}>
-        <InputGroup>
-          <Label>Full Name</Label>
-          <Input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your full name"
-            required
-          />
-        </InputGroup>
-        
-        <InputGroup>
-          <Label>Email Address</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email address"
-            required
-          />
-        </InputGroup>
-        
-        <InputGroup>
-          <Label>Password</Label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-            minLength={6}
-          />
-        </InputGroup>
-        
-        <InputGroup>
-          <Label>Confirm Password</Label>
-          <Input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
-            required
-            minLength={6}
-          />
-        </InputGroup>
-        
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </Button>
-        
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        {success && <SuccessMessage>{success}</SuccessMessage>}
-        
-        <LoginLink>
-          Already have an account? <Link to="/login">Login here</Link>
-        </LoginLink>
-      </SignupForm>
+      <SignUp
+        routing="path"
+        path="/signup"
+        signInUrl="/login"
+        fallbackRedirectUrl={redirectTo}
+        appearance={clerkSharedAppearance}
+      />
     </SignupContainer>
   );
 };

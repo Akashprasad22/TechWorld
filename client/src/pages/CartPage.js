@@ -1,185 +1,175 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
-import Cart from '../components/Cart';
+import { useAuth } from '../context/AuthContext';
 
-const CartPageContainer = styled.div`
-  padding: 2rem 0;
-`;
-
-const CartPageHeader = styled.div`
-  text-align: center;
-  margin-bottom: 3rem;
-  
-  h1 {
-    font-size: 2.5rem;
-    color: #333;
-    margin-bottom: 1rem;
-  }
-  
-  p {
-    color: #666;
-    font-size: 1.1rem;
-  }
-`;
-
-const CartContent = styled.div`
+const CartContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
   display: grid;
   grid-template-columns: 1fr 300px;
-  gap: 3rem;
-  
+  gap: 2rem;
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    padding: 1rem;
   }
 `;
 
-const CartItemsSection = styled.div`
+const CartSection = styled.div`
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+const SectionTitle = styled.h2`
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.5rem;
 `;
 
 const CartItem = styled.div`
   display: flex;
   align-items: center;
-  padding: 1.5rem;
+  gap: 1rem;
+  padding: 1rem;
   border-bottom: 1px solid #eee;
-  gap: 1.5rem;
-  
-  &:last-child {
-    border-bottom: none;
-  }
-`;
 
-const CartItemImage = styled.img`
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 8px;
-`;
+  img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
 
-const CartItemDetails = styled.div`
-  flex: 1;
-  
-  h3 {
-    color: #333;
-    margin-bottom: 0.5rem;
-  }
-  
-  p {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-  
-  .price {
-    color: #ff6b6b;
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-`;
+  .item-details {
+    flex: 1;
 
-const QuantityControls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  
-  button {
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    width: 35px;
-    height: 35px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background 0.3s;
-    
-    &:hover {
-      background: #e9ecef;
+    h4 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+
+    p {
+      margin: 0 0 0.5rem 0;
+      color: #666;
+      font-size: 0.9rem;
     }
   }
-  
-  span {
-    min-width: 40px;
-    text-align: center;
+
+  .item-price {
     font-weight: bold;
+    color: #667eea;
+    font-size: 1.1rem;
+  }
+
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    button {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: #f8f9fa;
+      }
+    }
+
+    span {
+      min-width: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  }
+
+  .remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+
+    &:hover {
+      background: #c82333;
+    }
   }
 `;
 
-const RemoveButton = styled.button`
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
-  
-  &:hover {
-    background: #c82333;
-  }
-`;
-
-const CartSummary = styled.div`
+const SummarySection = styled.div`
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   height: fit-content;
-  position: sticky;
-  top: 100px;
-  
-  h2 {
-    color: #333;
-    margin-bottom: 1.5rem;
-  }
 `;
 
 const SummaryRow = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  padding: 0.5rem 0;
   
   &.total {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #333;
+    border-top: 2px solid #667eea;
+    margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 2px solid #eee;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #667eea;
   }
 `;
 
 const CheckoutButton = styled.button`
   width: 100%;
-  background: #667eea;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 1.1rem;
-  transition: background 0.3s;
-  margin-top: 1.5rem;
-  
+  transition: transform 0.3s ease;
+  margin-top: 1rem;
+
   &:hover {
-    background: #5a67d8;
+    transform: translateY(-2px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
 const ContinueShoppingButton = styled.button`
   width: 100%;
-  background: transparent;
+  padding: 0.75rem;
+  background: white;
   color: #667eea;
   border: 2px solid #667eea;
-  padding: 1rem 2rem;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s;
-  margin-top: 1rem;
-  
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+
   &:hover {
     background: #667eea;
     color: white;
@@ -188,144 +178,152 @@ const ContinueShoppingButton = styled.button`
 
 const EmptyCart = styled.div`
   text-align: center;
-  padding: 4rem 2rem;
-  
-  i {
-    font-size: 4rem;
-    color: #ddd;
-    margin-bottom: 2rem;
-  }
-  
+  padding: 3rem;
+  color: #666;
+
   h2 {
-    color: #333;
     margin-bottom: 1rem;
+    color: #333;
   }
-  
+
   p {
-    color: #666;
     margin-bottom: 2rem;
   }
 `;
 
+const ShopNowButton = styled.button`
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+`;
+
 const CartPage = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { 
-    items, 
-    updateQuantity, 
+    cartItems, 
     removeFromCart, 
-    getTotalPrice, 
-    getTotalItems,
-    clearCart
+    updateQuantity, 
+    getTotalAmount, 
+    getTotalItems
   } = useCart();
 
-  const handleCheckout = () => {
-    if (items.length === 0) {
-      alert('Your cart is empty!');
-      return;
+  const handleQuantityChange = (id, newQuantity) => {
+    if (newQuantity > 0) {
+      updateQuantity(id, newQuantity);
     }
-    
-    const total = getTotalPrice();
-    const itemCount = getTotalItems();
-    alert(`Order placed successfully! ${itemCount} items - Total: ₹${total.toFixed(2)}`);
-    clearCart();
-    // Here you would typically send the order to your backend
-    window.location.href = '/';
   };
 
-  const subtotal = getTotalPrice();
-  const shipping = subtotal > 100 ? 0 : 10;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const handleRemoveItem = (id) => {
+    removeFromCart(id);
+  };
 
-  if (items.length === 0) {
+  const handleCheckout = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    navigate('/checkout');
+  };
+
+  const handleContinueShopping = () => {
+    navigate('/products');
+  };
+
+  if (cartItems.length === 0) {
     return (
-      <>
-        <CartPageContainer>
-          <div className="container">
-            <EmptyCart>
-              <i className="fas fa-shopping-cart"></i>
-              <h2>Your cart is empty</h2>
-              <p>Looks like you haven't added any products to your cart yet.</p>
-              <ContinueShoppingButton onClick={() => window.location.href = '/'}>
-                Continue Shopping
-              </ContinueShoppingButton>
-            </EmptyCart>
-          </div>
-        </CartPageContainer>
-        <Cart />
-      </>
+      <CartContainer>
+        <CartSection style={{ textAlign: 'center' }}>
+          <EmptyCart>
+            <h2>Your cart is empty</h2>
+            <p>Looks like you haven't added any items to your cart yet.</p>
+            <ShopNowButton onClick={handleContinueShopping}>
+              Continue Shopping
+            </ShopNowButton>
+          </EmptyCart>
+        </CartSection>
+      </CartContainer>
     );
   }
 
   return (
-    <>
-      <CartPageContainer>
-        <div className="container">
-          <CartPageHeader>
-            <h1>Shopping Cart</h1>
-            <p>{getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'} in your cart</p>
-          </CartPageHeader>
-          
-          <CartContent>
-            <CartItemsSection>
-              {items.map(item => (
-                <CartItem key={item.id}>
-                  <CartItemImage src={item.image} alt={item.name} />
-                  <CartItemDetails>
-                    <h3>{item.name}</h3>
-                    <p>{item.description}</p>
-                    <div className="price">₹{item.price}</div>
-                    <QuantityControls>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                      >
-                        -
-                      </button>
-                      <span>{item.quantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        +
-                      </button>
-                    </QuantityControls>
-                  </CartItemDetails>
-                  <RemoveButton onClick={() => removeFromCart(item.id)}>
-                    Remove
-                  </RemoveButton>
-                </CartItem>
-              ))}
-            </CartItemsSection>
-            
-            <CartSummary>
-              <h2>Order Summary</h2>
-              <SummaryRow>
-                <span>Subtotal:</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </SummaryRow>
-              <SummaryRow>
-                <span>Shipping:</span>
-                <span>{shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}</span>
-              </SummaryRow>
-              <SummaryRow>
-                <span>Tax:</span>
-                <span>₹{tax.toFixed(2)}</span>
-              </SummaryRow>
-              <SummaryRow className="total">
-                <span>Total:</span>
-                <span>₹{total.toFixed(2)}</span>
-              </SummaryRow>
-              <CheckoutButton onClick={handleCheckout}>
-                Proceed to Checkout
-              </CheckoutButton>
-              <ContinueShoppingButton onClick={() => window.location.href = '/'}>
-                Continue Shopping
-              </ContinueShoppingButton>
-            </CartSummary>
-          </CartContent>
-        </div>
-      </CartPageContainer>
-      <Cart />
-    </>
+    <CartContainer>
+      <CartSection>
+        <SectionTitle>Shopping Cart ({getTotalItems()} items)</SectionTitle>
+        
+        {cartItems.map((item) => (
+          <CartItem key={item.id}>
+            <img src={item.image} alt={item.name} />
+            <div className="item-details">
+              <h4>{item.name}</h4>
+              <p>₹{item.price.toFixed(2)}</p>
+              <div className="quantity-controls">
+                <button 
+                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                  disabled={item.quantity <= 1}
+                >
+                  -
+                </button>
+                <span>{item.quantity}</span>
+                <button 
+                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                >
+                  +
+                </button>
+              </div>
+              <button 
+                className="remove-btn"
+                onClick={() => handleRemoveItem(item.id)}
+              >
+                Remove
+              </button>
+            </div>
+            <div className="item-price">
+              ₹{(item.price * item.quantity).toFixed(2)}
+            </div>
+          </CartItem>
+        ))}
+      </CartSection>
+
+      <SummarySection>
+        <SectionTitle>Order Summary</SectionTitle>
+        
+        <SummaryRow>
+          <span>Subtotal:</span>
+          <span>₹{getTotalAmount().toFixed(2)}</span>
+        </SummaryRow>
+        <SummaryRow>
+          <span>Shipping:</span>
+          <span>FREE</span>
+        </SummaryRow>
+        <SummaryRow>
+          <span>Tax:</span>
+          <span>₹0.00</span>
+        </SummaryRow>
+        <SummaryRow className="total">
+          <span>Total:</span>
+          <span>₹{getTotalAmount().toFixed(2)}</span>
+        </SummaryRow>
+
+        <CheckoutButton onClick={handleCheckout}>
+          Proceed to Checkout
+        </CheckoutButton>
+        
+        <ContinueShoppingButton onClick={handleContinueShopping}>
+          Continue Shopping
+        </ContinueShoppingButton>
+      </SummarySection>
+    </CartContainer>
   );
 };
 

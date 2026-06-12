@@ -31,7 +31,7 @@ const orderSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  items: [orderItemSchema],
+  products: [orderItemSchema],
   totalAmount: {
     type: Number,
     required: true,
@@ -46,20 +46,35 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['credit_card', 'debit_card', 'paypal', 'cash_on_delivery'],
+    enum: ['razorpay', 'cash_on_delivery', 'upi', 'credit_card', 'debit_card', 'net_banking', 'emi', 'wallet'],
     required: true
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'completed', 'failed', 'refunded'],
-    default: 'pending'
+    enum: ['Pending', 'Paid', 'Failed', 'Refunded'],
+    default: 'Pending'
   },
   orderStatus: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending'
+    enum: ['Processing', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'],
+    default: 'Processing'
   },
-  orderDate: {
+  razorpayOrderId: {
+    type: String
+  },
+  razorpayPaymentId: {
+    type: String
+  },
+  razorpaySignature: {
+    type: String
+  },
+  paymentDetails: {
+    method: String,
+    bank: String,
+    wallet: String,
+    emiPlan: String
+  },
+  createdAt: {
     type: Date,
     default: Date.now
   },

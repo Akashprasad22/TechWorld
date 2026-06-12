@@ -20,6 +20,26 @@ const GlobalStyles = createGlobalStyle`
     padding: 0 20px;
   }
 
+  /* Profile Dropdown Fixes */
+  .user-menu {
+    position: relative;
+    z-index: 1000;
+  }
+  
+  .profile-dropdown {
+    position: absolute !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+  
+  .profile-dropdown[style*="opacity: 0"] {
+    pointer-events: none !important;
+  }
+  
+  .profile-dropdown[style*="opacity: 1"] {
+    pointer-events: auto !important;
+  }
+
   /* Loading State */
   .loading {
     text-align: center;

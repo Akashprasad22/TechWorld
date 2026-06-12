@@ -1,6 +1,5 @@
 node_modules/
 client/node_modules/
-.env
 .env.local
 dist/
 build/
@@ -9,3 +8,8 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local Netlify folder
+.netlify
+
+.vercel

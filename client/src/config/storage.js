@@ -5,7 +5,9 @@ const STORAGE_KEYS = {
   USER: 'techhub_user',
   USER_DATA: 'techhub_user_data',
   AUTH_TOKEN: 'techhub_auth_token',
-  IS_LOGGED_IN: 'techhub_is_logged_in'
+  IS_LOGGED_IN: 'techhub_is_logged_in',
+  ORDERS: 'techhub_orders',
+  CART: 'techhub_cart'
 };
 
 // Local storage utilities
@@ -115,5 +117,53 @@ export const storage = {
       };
       reader.readAsDataURL(file);
     });
+  },
+
+  // Save order to localStorage
+  saveOrder: (order) => {
+    try {
+      const orders = storage.getUserOrders(order.userEmail) || [];
+      orders.push(order);
+      const allOrders = storage.getAllOrders() || {};
+      allOrders[order.userEmail] = orders;
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(allOrders));
+      console.log('✅ Order saved to localStorage');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error saving order:', error);
+      return { success: false, error: 'Failed to save order' };
+    }
+  },
+
+  // Get all orders from localStorage
+  getAllOrders: () => {
+    try {
+      const orders = localStorage.getItem(STORAGE_KEYS.ORDERS);
+      return orders ? JSON.parse(orders) : {};
+    } catch (error) {
+      console.error('❌ Error getting all orders:', error);
+      return {};
+    }
+  },
+
+  // Get user orders from localStorage
+  getUserOrders: (userEmail) => {
+    try {
+      const allOrders = storage.getAllOrders();
+      return allOrders[userEmail] || [];
+    } catch (error) {
+      console.error('❌ Error getting user orders:', error);
+      return [];
+    }
+  },
+
+  // Clear cart after checkout
+  clearCart: () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.CART);
+      console.log('✅ Cart cleared after checkout');
+    } catch (error) {
+      console.error('❌ Error clearing cart:', error);
+    }
   }
 };

@@ -115,27 +115,27 @@ const Footer = () => {
             <h3>About TechHub</h3>
             <p>Your trusted destination for the latest electronics and gadgets.</p>
             <SocialLinks>
-              <a href="#"><i className="fab fa-facebook"></i></a>
-              <a href="#"><i className="fab fa-twitter"></i></a>
-              <a href="#"><i className="fab fa-instagram"></i></a>
+              <a href="https://facebook.com" aria-label="Facebook"><i className="fab fa-facebook"></i></a>
+              <a href="https://twitter.com" aria-label="Twitter"><i className="fab fa-twitter"></i></a>
+              <a href="https://instagram.com" aria-label="Instagram"><i className="fab fa-instagram"></i></a>
             </SocialLinks>
           </FooterSection>
           <FooterSection>
             <h3>Customer Service</h3>
             <ul>
-              <li><a href="#">Contact Us</a></li>
-              <li><a href="#">Shipping Info</a></li>
-              <li><a href="#">Returns</a></li>
-              <li><a href="#">FAQ</a></li>
+              <li><a href="/profile">Contact Us</a></li>
+              <li><a href="/products">Shipping Info</a></li>
+              <li><a href="/cart">Returns</a></li>
+              <li><a href="/login">FAQ</a></li>
             </ul>
           </FooterSection>
           <FooterSection>
             <h3>Quick Links</h3>
             <ul>
-              <li><a href="#">Privacy Policy</a></li>
-              <li><a href="#">Terms of Service</a></li>
-              <li><a href="#">Warranty</a></li>
-              <li><a href="#">Track Order</a></li>
+              <li><a href="/login">Privacy Policy</a></li>
+              <li><a href="/signup">Terms of Service</a></li>
+              <li><a href="/products">Warranty</a></li>
+              <li><a href="/cart">Track Order</a></li>
             </ul>
           </FooterSection>
           <FooterSection>

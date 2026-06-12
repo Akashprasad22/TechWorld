@@ -1,61 +1,81 @@
-const express = require('express');
+nconst express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
-
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/techhub', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch((err) => console.log('MongoDB connection error:', err));
+const connectDB = async () => {
+  const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/techhub';
+  
+  try {
+    await mongoose.connect(mongoURI);
+    console.log('✅ MongoDB Connected Successfully!');
+  } catch (error) {
+    console.error('❌ MongoDB Connection Error:', error.message);
+    process.exit(1);
+  }
+};
 
-// Routes
+// Basic Routes
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to TechHub API' });
+  res.json({ 
+    message: 'MERN E-commerce API is running!',
+    status: 'OK',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Not Connected'
+  });
 });
 
-// Product Routes
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Not Connected',
+    server: 'Running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Import Routes
 const productRoutes = require('./routes/products');
-app.use('/api/products', productRoutes);
-
-// Order Routes
-const orderRoutes = require('./routes/orders');
-app.use('/api/orders', orderRoutes);
-
-// User Routes
 const userRoutes = require('./routes/users');
+const cartRoutes = require('./routes/cart');
+const legacyOrderRoutes = require('./routes/order');
+const orderRoutes = require('./routes/orders');
+const paymentRoutes = require('./routes/payment');
+
+// Use Routes
+app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/order', legacyOrderRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/payment', paymentRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+// Start Server
+const startServer = async () => {
+  try {
+    // Connect to database first
+    await connectDB();
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`URL: http://localhost:${PORT}`);
+      console.log(`Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Not Connected'}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
+// Start the server
+startServer();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+module.exports = app;

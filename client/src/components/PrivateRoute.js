@@ -1,14 +1,10 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { storage } from '../config/storage';
 
 const PrivateRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
   const location = useLocation();
-
-  console.log('PrivateRoute - user:', user);
-  console.log('PrivateRoute - loading:', loading);
 
   if (loading) {
     return (
@@ -40,17 +36,10 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  // Check login state using storage utility
-  const isLoggedIn = storage.isLoggedIn();
-  const storedUserData = storage.getUserData();
-
-  if (!isLoggedIn) {
-    // Redirect to login page with return URL
-    console.log('User not logged in, redirecting to login');
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log('User authenticated, rendering protected content');
   return children;
 };
 

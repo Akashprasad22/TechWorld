@@ -1,16 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { storage } from '../config/storage';
+import { formatPrice } from '../data/products';
 
 const CartOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0,0,0,0.5);
   z-index: 2000;
-  display: ${props => props.isOpen ? 'block' : 'none'};
+  display: ${(props) => (props.isOpen ? 'block' : 'none')};
   animation: fadeIn 0.3s;
 `;
 
@@ -36,7 +36,7 @@ const CartHeader = styled.div`
   border-bottom: 1px solid #eee;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  
+
   h3 {
     margin: 0;
   }
@@ -46,8 +46,7 @@ const CloseButton = styled.span`
   font-size: 2rem;
   cursor: pointer;
   color: white;
-  transition: color 0.3s;
-  
+
   &:hover {
     color: #ff6b6b;
   }
@@ -104,8 +103,7 @@ const QuantityButton = styled.button`
   height: 30px;
   cursor: pointer;
   border-radius: 3px;
-  transition: background 0.3s;
-  
+
   &:hover {
     background: #e9ecef;
   }
@@ -123,8 +121,7 @@ const RemoveButton = styled.button`
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s;
-  
+
   &:hover {
     background: #ff5252;
   }
@@ -149,9 +146,8 @@ const CheckoutButton = styled.button`
   border-radius: 5px;
   cursor: pointer;
   font-size: 1.1rem;
-  transition: background 0.3s;
   width: 100%;
-  
+
   &:hover {
     background: #5a67d8;
   }
@@ -161,7 +157,7 @@ const EmptyCart = styled.div`
   text-align: center;
   padding: 3rem;
   color: #666;
-  
+
   i {
     font-size: 3rem;
     margin-bottom: 1rem;
@@ -170,33 +166,62 @@ const EmptyCart = styled.div`
 `;
 
 const Cart = () => {
-  const { 
-    items, 
-    isOpen, 
-    toggleCart, 
-    updateQuantity, 
-    removeFromCart, 
-    getTotalPrice 
+  const {
+    getTotalPrice,
+    isOpen,
+    items,
+    removeFromCart,
+    toggleCart,
+    updateQuantity,
+    clearCart,
   } = useCart();
-
-  // Format price with INR symbol (prices are already in INR)
-  const formatINRPrice = (price) => {
-    return `₹${price.toLocaleString('en-IN')}`;
-  };
+  const { user } = useAuth();
 
   const handleCheckout = () => {
     if (items.length === 0) {
       alert('Your cart is empty!');
       return;
     }
+
+    if (!user) {
+      alert('Please login to place an order');
+      return;
+    }
+
+    // Create order
+    const order = {
+      id: Date.now().toString(), // Simple order ID
+      userEmail: user.email,
+      date: new Date().toISOString(),
+      status: 'processing', // Initial status
+      items: items.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image
+      })),
+      total: getTotalPrice()
+    };
+
+    // Save order to localStorage
+    const result = storage.saveOrder(order);
     
-    const total = getTotalPrice();
-    alert(`Order placed successfully! Total: ${formatINRPrice(total)}`);
-    // Here you would typically send the order to your backend
-    toggleCart();
+    if (result.success) {
+      // Clear cart after successful order
+      clearCart();
+      toggleCart();
+      
+      // Show success message
+      alert(`Order placed successfully! Order ID: #${order.id}\nTotal: ${formatPrice(order.total)}\n\nYour order is now being processed.`);
+    } else {
+      alert('Failed to place order. Please try again.');
+    }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <>
@@ -214,22 +239,18 @@ const Cart = () => {
                 <p>Your cart is empty</p>
               </EmptyCart>
             ) : (
-              items.map(item => (
+              items.map((item) => (
                 <CartItem key={item.id}>
                   <CartItemImage src={item.image} alt={item.name} />
                   <CartItemInfo>
                     <CartItemTitle>{item.name}</CartItemTitle>
-                    <CartItemPrice>{formatINRPrice(item.price)}</CartItemPrice>
+                    <CartItemPrice>{formatPrice(item.price)}</CartItemPrice>
                     <QuantityControls>
-                      <QuantityButton 
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      >
+                      <QuantityButton onClick={() => updateQuantity(item.id, item.quantity - 1)}>
                         -
                       </QuantityButton>
                       <QuantityDisplay>{item.quantity}</QuantityDisplay>
-                      <QuantityButton 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
+                      <QuantityButton onClick={() => updateQuantity(item.id, item.quantity + 1)}>
                         +
                       </QuantityButton>
                     </QuantityControls>
@@ -243,7 +264,7 @@ const Cart = () => {
           </CartItems>
           {items.length > 0 && (
             <CartSummary>
-              <CartTotal>Total: {formatINRPrice(getTotalPrice())}</CartTotal>
+              <CartTotal>Total: {formatPrice(getTotalPrice())}</CartTotal>
               <CheckoutButton onClick={handleCheckout}>
                 Proceed to Checkout
               </CheckoutButton>

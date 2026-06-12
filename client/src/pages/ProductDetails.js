@@ -1,336 +1,374 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useCart } from '../context/CartContext';
-import { getProductById } from '../data/products';
-import { generateProductImage } from '../services/aiImageGenerator';
+import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
-const ProductDetailsContainer = styled.div`
+const ProductContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
-  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 2rem;
+  }
 `;
 
-const ProductImageContainer = styled.div`
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+const ProductImage = styled.div`
+  img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 `;
 
-const ProductImage = styled.img`
-  width: 100%;
-  height: 400px;
-  object-fit: cover;
-`;
-
-const ProductInfoContainer = styled.div`
-  background: white;
-  border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-`;
-
-const ProductTitle = styled.h1`
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 1rem;
-`;
-
-const ProductCategory = styled.div`
-  color: #666;
-  font-size: 1rem;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const ProductPrice = styled.div`
-  font-size: 2rem;
-  font-weight: bold;
-  color: #ff6b6b;
-  margin-bottom: 1rem;
-`;
-
-const ProductRating = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  font-size: 1rem;
-  color: #666;
-`;
-
-const ProductDescription = styled.p`
-  color: #666;
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
-`;
-
-const ProductFeatures = styled.div`
-  margin-bottom: 2rem;
-  
-  h3 {
+const ProductInfo = styled.div`
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
     color: #333;
+  }
+
+  .price {
+    font-size: 1.5rem;
+    color: #667eea;
+    font-weight: bold;
     margin-bottom: 1rem;
   }
-  
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  li {
-    padding: 0.5rem 0;
+
+  .description {
     color: #666;
-    position: relative;
-    padding-left: 1.5rem;
-    
-    &:before {
-      content: '✓';
-      position: absolute;
-      left: 0;
-      color: #667eea;
-      font-weight: bold;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .stock-info {
+    color: #28a745;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  .out-of-stock {
+    color: #dc3545;
+  }
+`;
+
+const QuantitySelector = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+
+    button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: #f8f9fa;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: background 0.3s ease;
+
+      &:hover {
+        background: #e9ecef;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    span {
+      width: 60px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 500;
     }
   }
 `;
 
-const ProductActions = styled.div`
-  display: flex;
+const ActionButtons = styled.div`
+  display: grid;
   gap: 1rem;
-  margin-bottom: 2rem;
+
+  button {
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 `;
 
 const AddToCartButton = styled.button`
-  flex: 1;
-  padding: 1rem;
-  background: #ff6b6b;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-  
-  &:hover {
-    background: #ff5252;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   }
 `;
 
-const BackButton = styled(Link)`
-  padding: 1rem 2rem;
-  background: #667eea;
+const BuyNowButton = styled.button`
+  background: linear-gradient(135deg, #28a745, #20c997);
   color: white;
-  text-decoration: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: background 0.3s;
-  
-  &:hover {
-    background: #5a67d8;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
   }
 `;
 
-const ImageGeneratingOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-`;
-
-const GeneratingSpinner = styled.div`
-  width: 50px;
-  height: 50px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
+const LoadingSpinner = styled.div`
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-  
+
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
 `;
 
-const GeneratingText = styled.div`
-  color: #667eea;
-  font-weight: 600;
-  font-size: 1rem;
-`;
-
-const ImageReplacedBadge = styled.div`
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 25px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  display: inline-block;
-  animation: fadeIn 0.5s ease-in;
-  
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(-10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-`;
-
 const ErrorMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-  font-size: 1.2rem;
+  color: #dc3545;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  border-radius: 6px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  font-size: 0.9rem;
 `;
 
 const ProductDetails = () => {
   const { id } = useParams();
-  const { addItem } = useCart();
-  const [quantity, setQuantity] = useState(1);
-  const [imageError, setImageError] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addToCart } = useCart();
   
-  const product = getProductById(id);
+  const [product, setProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
 
-  // Format price with INR symbol (prices are already in INR)
-  const formatINRPrice = (price) => {
-    return `₹${price.toLocaleString('en-IN')}`;
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/products/${id}`);
+        if (response.data.success) {
+          setProduct(response.data.product);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        setError('Failed to load product details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  const handleQuantityChange = (change) => {
+    const newQuantity = quantity + change;
+    if (newQuantity >= 1 && newQuantity <= (product?.stock || 10)) {
+      setQuantity(newQuantity);
+    }
   };
 
-  // Generate AI image when original image fails
-  const generateAIImage = async () => {
-    setIsGeneratingImage(true);
+  const handleAddToCart = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setAddingToCart(true);
+    setError('');
+
     try {
-      const aiImageUrl = await generateProductImage(product.name, product.description, product.category);
-      setAiGeneratedImage(aiImageUrl);
-      setImageError(false);
+      await addToCart({
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity
+      });
+      
+      // Success feedback
+      setAddingToCart(false);
+      // You could show a toast notification here
+      
     } catch (error) {
-      console.error('Image generation failed:', error);
-      setImageError(true);
-    } finally {
-      setIsGeneratingImage(false);
+      console.error('Error adding to cart:', error);
+      setError('Failed to add to cart');
+      setAddingToCart(false);
     }
   };
 
-  // Handle image error and trigger AI generation
-  const handleImageError = async () => {
-    if (!aiGeneratedImage && !isGeneratingImage) {
-      await generateAIImage();
-    } else {
-      setImageError(true);
+  const handleBuyNow = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setBuyingNow(true);
+    setError('');
+
+    try {
+      // Add product to cart first
+      await addToCart({
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity
+      });
+      
+      // Navigate to checkout
+      navigate('/checkout');
+      
+    } catch (error) {
+      console.error('Error with buy now:', error);
+      setError('Failed to proceed to checkout');
+      setBuyingNow(false);
     }
   };
 
-  // Get current image source
-  const getCurrentImageSrc = () => {
-    if (aiGeneratedImage) return aiGeneratedImage;
-    if (imageError) return 'https://images.unsplash.com/photo-1607082318824-0b96e631c11e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-    return product.image;
-  };
-
-  if (!product) {
+  if (loading) {
     return (
-      <ErrorMessage>
-        <h2>Product Not Found</h2>
-        <p>The product you're looking for doesn't exist.</p>
-        <BackButton to="/products">Back to Products</BackButton>
-      </ErrorMessage>
+      <ProductContainer>
+        <div>Loading product details...</div>
+      </ProductContainer>
     );
   }
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity: quantity
-    });
-  };
+  if (!product) {
+    return (
+      <ProductContainer>
+        <div>Product not found</div>
+      </ProductContainer>
+    );
+  }
 
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push('⭐');
-    }
-    
-    return stars.join('');
-  };
+  const isInStock = product.stock > 0;
 
   return (
-    <ProductDetailsContainer>
-      <ProductImageContainer>
-        <ProductImage 
-          src={getCurrentImageSrc()} 
-          alt={product.name}
-          onError={handleImageError}
-        />
-        {isGeneratingImage && (
-          <ImageGeneratingOverlay>
-            <GeneratingSpinner />
-            <GeneratingText>Generating AI Image...</GeneratingText>
-          </ImageGeneratingOverlay>
-        )}
-      </ProductImageContainer>
+    <ProductContainer>
+      <ProductImage>
+        <img src={product.image} alt={product.name} />
+      </ProductImage>
       
-      <ProductInfoContainer>
-        <ProductTitle>{product.name}</ProductTitle>
-        <ProductCategory>{product.category}</ProductCategory>
-        <ProductPrice>{formatINRPrice(product.price)}</ProductPrice>
+      <ProductInfo>
+        <h1>{product.name}</h1>
         
-        {product.rating && (
-          <ProductRating>
-            {renderStars(product.rating)} ({product.reviews} reviews)
-          </ProductRating>
-        )}
-        
-        {aiGeneratedImage && (
-          <ImageReplacedBadge>Image Replaced</ImageReplacedBadge>
-        )}
-        
-        <ProductDescription>{product.description}</ProductDescription>
-        
-        {product.features && (
-          <ProductFeatures>
-            <h3>Features</h3>
-            <ul>
-              {product.features.map((feature, index) => (
-                <li key={index}>{feature}</li>
-              ))}
-            </ul>
-          </ProductFeatures>
-        )}
-        
-        <ProductActions>
-          <AddToCartButton onClick={handleAddToCart}>
-            Add to Cart
-          </AddToCartButton>
-          <BackButton to="/products">Back to Products</BackButton>
-        </ProductActions>
-        
-        <div>
-          <strong>Stock Status:</strong> {product.inStock ? 'In Stock' : 'Out of Stock'}
+        <div className="price">
+          ₹{product.price.toFixed(2)}
         </div>
-      </ProductInfoContainer>
-    </ProductDetailsContainer>
+        
+        <div className={`stock-info ${!isInStock ? 'out-of-stock' : ''}`}>
+          {isInStock ? `In Stock (${product.stock} available)` : 'Out of Stock'}
+        </div>
+        
+        <div className="description">
+          {product.description}
+        </div>
+        
+        <QuantitySelector>
+          <label>Quantity:</label>
+          <div className="quantity-controls">
+            <button 
+              onClick={() => handleQuantityChange(-1)}
+              disabled={quantity <= 1}
+            >
+              -
+            </button>
+            <span>{quantity}</span>
+            <button 
+              onClick={() => handleQuantityChange(1)}
+              disabled={quantity >= (product.stock || 10)}
+            >
+              +
+            </button>
+          </div>
+        </QuantitySelector>
+        
+        <ActionButtons>
+          <AddToCartButton
+            onClick={handleAddToCart}
+            disabled={!isInStock || addingToCart}
+          >
+            {addingToCart ? (
+              <>
+                <LoadingSpinner />
+                Adding...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-shopping-cart"></i>
+                Add to Cart
+              </>
+            )}
+          </AddToCartButton>
+          
+          <BuyNowButton
+            onClick={handleBuyNow}
+            disabled={!isInStock || buyingNow}
+          >
+            {buyingNow ? (
+              <>
+                <LoadingSpinner />
+                Processing...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-bolt"></i>
+                Buy Now
+              </>
+            )}
+          </BuyNowButton>
+        </ActionButtons>
+        
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </ProductInfo>
+    </ProductContainer>
   );
 };
 

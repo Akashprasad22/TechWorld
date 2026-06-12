@@ -14,6 +14,8 @@ const HeaderContainer = styled.header`
   margin: 0 auto;
   position: relative;
   border: 1px solid rgba(255,255,255,0.1);
+  overflow: visible;
+  z-index: 100;
 `;
 
 const HeaderTop = styled.div`
@@ -94,6 +96,8 @@ const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  position: relative;
+  z-index: 1000;
 `;
 
 const CartIcon = styled.div`
@@ -125,29 +129,42 @@ const CartCount = styled.span`
 
 const ProfileDropdown = styled.div`
   position: absolute;
-  top: calc(100% + 16px);
+  top: calc(100% + 8px);
   right: 0;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   min-width: 280px;
-  z-index: 1002;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.06);
+  z-index: 9999;
+  overflow: visible;
+  border: 1px solid rgba(0,0,0,0.08);
   opacity: ${props => props.isOpen ? 1 : 0};
   transform: ${props => props.isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)'};
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 16px;
+  pointer-events: ${props => props.isOpen ? 'auto' : 'none'};
   
   &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid white;
+    filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.08));
+  }
+  
+  &::after {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, #f8f9fa 0%, #667eea 100%);
     height: 4px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #667eea 100%);
     border-radius: 12px 12px 0 0;
   }
 `;
@@ -187,6 +204,7 @@ const UserMenu = styled.div`
   cursor: pointer;
   font-size: 1.2rem;
   transition: transform 0.3s;
+  z-index: 1000;
   
   &:hover {
     transform: scale(1.1);
@@ -231,7 +249,7 @@ const Header = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { getTotalItems, toggleCart } = useCart();
-  const { user, userData, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -259,15 +277,24 @@ const Header = () => {
     const handleClickOutside = (event) => {
       if (isProfileOpen && dropdownRef.current && 
           !dropdownRef.current.contains(event.target) && 
-          !event.target.closest('.profile-dropdown')) {
+          !event.target.closest('.profile-dropdown') &&
+          !event.target.closest('.user-menu')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && isProfileOpen) {
         setIsProfileOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isProfileOpen]);
 
@@ -296,10 +323,13 @@ const Header = () => {
               <i className="fas fa-shopping-cart"></i>
               {cartItemCount > 0 && <CartCount>{cartItemCount}</CartCount>}
             </CartIcon>
-            <UserMenu onClick={toggleProfileDropdown} ref={dropdownRef}>
+            <UserMenu onClick={toggleProfileDropdown} ref={dropdownRef} className="user-menu">
               <i className="fas fa-user"></i>
               {isProfileOpen && (
-                <ProfileDropdown className="profile-dropdown" isOpen={isProfileOpen} ref={dropdownRef}>
+                <ProfileDropdown 
+                  className="profile-dropdown" 
+                  isOpen={isProfileOpen}
+                >
                   <DropdownItem onClick={() => { navigate('/profile'); closeProfileDropdown(); }}>
                     <DropdownIcon className="fas fa-user"></DropdownIcon>
                     <span>Profile</span>
